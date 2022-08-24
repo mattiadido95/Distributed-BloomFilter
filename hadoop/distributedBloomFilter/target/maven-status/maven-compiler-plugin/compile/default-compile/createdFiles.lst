@@ -1,0 +1,5 @@
+it/unipi/hadoop/App.class
+it/unipi/hadoop/stages/ParameterCalculation$ParameterCalculationMapper.class
+it/unipi/hadoop/model/BloomFilter.class
+it/unipi/hadoop/stages/ParameterCalculation.class
+it/unipi/hadoop/stages/ParameterCalculation$ParameterCalculationReducer.class
