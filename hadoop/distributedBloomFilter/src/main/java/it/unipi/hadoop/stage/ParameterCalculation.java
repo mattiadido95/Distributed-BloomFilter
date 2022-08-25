@@ -1,12 +1,10 @@
-package it.unipi.hadoop.stages;
+package it.unipi.hadoop.stage;
 
 import java.io.IOException;
-
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -17,13 +15,14 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 public class ParameterCalculation {
-    public static class ParameterCalculationMapper extends Mapper<Object, Text, IntWritable, LongWritable> {
-        private long[] counter;
+
+    public static class ParameterCalculationMapper extends Mapper<Object, Text, IntWritable, IntWritable> {
+        private int[] counter;
         private final int maxRating = 10;
 
         @Override
         protected void setup(Context context){
-            counter = new long[maxRating];
+            counter = new int[maxRating];
         }
 
         @Override
@@ -48,24 +47,24 @@ public class ParameterCalculation {
         protected void cleanup(Context context) throws IOException, InterruptedException {
             for (int i=0; i < maxRating; i++)
                 if(counter[i] > 0)
-                    context.write( new IntWritable(i+1), new LongWritable(counter[i]) );
+                    context.write( new IntWritable(i+1), new IntWritable(counter[i]) );
         }
     }
 
-    public static class ParameterCalculationReducer extends Reducer<IntWritable, LongWritable, IntWritable, Text> {
+    public static class ParameterCalculationReducer extends Reducer<IntWritable, IntWritable, IntWritable, Text> {
 
         @Override
-        public void reduce(IntWritable key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {
-            long n = 0;
+        public void reduce(IntWritable key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+            int n = 0;
             int m,k;
             double p = context.getConfiguration().getDouble("parameter.calculation.p",0.05);
 
-            for (LongWritable value : values)
+            for (IntWritable value : values)
                 n += value.get();
 
             m = (int) (- ( n * Math.log(p) ) / (Math.pow(Math.log(2),2.0)));
             k = (int) ((m/n) * Math.log(2));
-            Text value = new Text(n + "," + m + "," + k);
+            Text value = new Text(n + "\t" + m + "\t" + k);
             context.write(key, value);
         }
 
@@ -91,7 +90,7 @@ public class ParameterCalculation {
 
         // define mapper's output key-value
         job.setMapOutputKeyClass(IntWritable.class);
-        job.setMapOutputValueClass(LongWritable.class);
+        job.setMapOutputValueClass(IntWritable.class);
 
         // define reducer's output key-value
         job.setOutputKeyClass(IntWritable.class);

@@ -4,8 +4,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.List;
 
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.hash.Hash;
@@ -22,12 +22,12 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
         this.arrayBF = new BitSet((int) m);
     }
 
-    public BloomFilter(int m, int k, ArrayList<BitSet> arrayBFs) {
+    public BloomFilter(int m, int k, List<BloomFilter> arrayBFs) {
         this.m = m;
         this.k = k;
         this.arrayBF = new BitSet((int) m);
-        for (BitSet bf : arrayBFs)
-            this.arrayBF.or(bf);
+        for (BloomFilter bf : arrayBFs)
+            this.arrayBF.or(bf.getArrayBF());
     }
 
     public void add(String title){

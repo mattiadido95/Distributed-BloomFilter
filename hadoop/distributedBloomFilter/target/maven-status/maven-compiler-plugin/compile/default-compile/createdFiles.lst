@@ -1,5 +1,9 @@
+it/unipi/hadoop/utility/Log.class
+it/unipi/hadoop/stage/ParameterCalculation.class
+it/unipi/hadoop/stage/BloomFilterGeneration$BloomFilterGenerationMapper.class
+it/unipi/hadoop/stage/ParameterCalculation$ParameterCalculationReducer.class
 it/unipi/hadoop/App.class
-it/unipi/hadoop/stages/ParameterCalculation$ParameterCalculationMapper.class
+it/unipi/hadoop/stage/BloomFilterGeneration.class
 it/unipi/hadoop/model/BloomFilter.class
-it/unipi/hadoop/stages/ParameterCalculation.class
-it/unipi/hadoop/stages/ParameterCalculation$ParameterCalculationReducer.class
+it/unipi/hadoop/stage/ParameterCalculation$ParameterCalculationMapper.class
+it/unipi/hadoop/stage/BloomFilterGeneration$BloomFilterGenerationReducer.class
