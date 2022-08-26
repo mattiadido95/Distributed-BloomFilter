@@ -137,7 +137,6 @@ public class BloomFilterGeneration {
 
         Job job = Job.getInstance(conf, "BloomFilterGeneration");
         job.setJarByClass(BloomFilterGeneration.class);
-
         // set mapper/reducer
         job.setMapperClass(BloomFilterGenerationMapper.class);
         job.setReducerClass(BloomFilterGenerationReducer.class);
@@ -150,7 +149,9 @@ public class BloomFilterGeneration {
         job.setOutputKeyClass(IntWritable.class);
         job.setOutputValueClass(BloomFilter.class);
 
-        //job.setNumReduceTasks(1);
+//        //DEBUG
+//        job.getConfiguration().setInt("mapreduce.input.lineinputformat.linespermap", 1244453);
+//        job.setNumReduceTasks(1);
 
         try {
             int[] result = readFilterParameter(conf, "hdfs://hadoop-namenode:9820/user/hadoop/parameter/");
