@@ -26,10 +26,11 @@ import org.apache.hadoop.util.GenericOptionsParser;
 
 public class BloomFilterGeneration {
 
-    private static void readFilterParameter(Configuration conf, String pathString) throws IOException {
+    private static int[] readFilterParameter(Configuration conf, String pathString) throws IOException {
         Path pt = new Path(pathString);// Location of file in HDFS
         FileSystem fs = FileSystem.get(conf);
         FileStatus[] status = fs.listStatus(pt);
+        int[] result = new int[30];
         for (FileStatus fileStatus : status) {
             if (!fileStatus.getPath().toString().endsWith("_SUCCESS")) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
@@ -41,14 +42,15 @@ public class BloomFilterGeneration {
                     int n = Integer.parseInt(tokens[1]);
                     int m = Integer.parseInt(tokens[2]);
                     int k = Integer.parseInt(tokens[3]);
-                    conf.setInt("filter." + rating + ".parameter.n",n);
-                    conf.setInt("filter." + rating + ".parameter.m",m);
-                    conf.setInt("filter." + rating + ".parameter.k",k);
+                    result[(rating-1)*3] = n;
+                    result[(rating-1)*3+1] = m;
+                    result[(rating-1)*3+2] = k;
                 }
                 br.close();
                 fs.close();
             }
         }
+        return result;
     }
 
     public static class BloomFilterGenerationMapper extends Mapper<Object, Text, IntWritable, BloomFilter> {
@@ -57,10 +59,14 @@ public class BloomFilterGeneration {
 
         @Override
         protected void setup(Context context) {
+
             this.bf = new BloomFilter[maxRating];
+
             for(int i=0; i<maxRating; i++){
-                int m = context.getConfiguration().getInt("filter." + (i+1) + ".parameter.m",0);
-                int k = context.getConfiguration().getInt("filter." + (i+1) + ".parameter.k",0);
+                int index = i+1;
+                int m = context.getConfiguration().getInt("filter." + index + ".parameter.m",0);
+                int k = context.getConfiguration().getInt("filter." + index + ".parameter.k",0);
+                //Log.writeLog("Setup : " + m + "\t" + k);
                 //no film for rating i
                 if(m == 0 || k == 0)
                     bf[i] = null;
@@ -83,16 +89,20 @@ public class BloomFilterGeneration {
             // <title, rating, numVotes>
             if (tokens.length == 3) {
                 int roundedRating = (int) Math.round(Double.parseDouble(tokens[1]));
-                if(bf[roundedRating-1] != null)
-                    bf[roundedRating-1].add(tokens[0]);
+                if(bf[roundedRating-1] != null) {
+                    bf[roundedRating - 1].add(tokens[0]);
+                    //Log.writeLog(context.getConfiguration(), "Map : " + tokens + "\t" + bf[roundedRating - 1]);
+                }
             }
         }
 
         @Override
         protected void cleanup(Context context) throws IOException, InterruptedException {
             for (int i = 0; i < maxRating; i++)
-                if (bf[i] != null)
+                if (bf[i] != null) {
+                    //Log.writeLog(context.getConfiguration(),"Cleanup : " + bf[i].toString());
                     context.write(new IntWritable(i + 1), bf[i]);
+            }
         }
     }
 
@@ -106,8 +116,9 @@ public class BloomFilterGeneration {
             for(BloomFilter bf : values)
                 bfs.add(bf);
 
-            int m = context.getConfiguration().getInt("filter." + (key.get() + 1) + ".parameter.m",0);
-            int k = context.getConfiguration().getInt("filter." + (key.get() + 1) + ".parameter.k",0);
+            int m = context.getConfiguration().getInt("filter." + (key.get()) + ".parameter.m",0);
+            int k = context.getConfiguration().getInt("filter." + (key.get()) + ".parameter.k",0);
+            //Log.writeLog("Reducer : " + m + "\t" + k);
             bfTot = new BloomFilter(m,k,bfs);
             context.write(key, bfTot);
         }
@@ -139,15 +150,20 @@ public class BloomFilterGeneration {
         job.setOutputKeyClass(IntWritable.class);
         job.setOutputValueClass(BloomFilter.class);
 
-        job.setNumReduceTasks(1);
+        //job.setNumReduceTasks(1);
 
-        // set parameters for bloom filter generation
-        String path = "hdfs://hadoop-namenode:9820/user/hadoop/parameter/";
         try {
-            readFilterParameter(conf, path);
+            int[] result = readFilterParameter(conf, "hdfs://hadoop-namenode:9820/user/hadoop/parameter/");
+            for(int i = 0; i < 10; i++) {
+                int index = ((i)*3);
+                job.getConfiguration().setInt("filter." + (i+1) + ".parameter.n", result[index]);
+                job.getConfiguration().setInt("filter." + (i+1) + ".parameter.m", result[index+1]);
+                job.getConfiguration().setInt("filter." + (i+1) + ".parameter.k", result[index+2]);
+            }
         }catch(IOException ioe){
             ioe.printStackTrace();
         }
+
         // define I/O
         FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
         FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));

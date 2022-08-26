@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
 import java.util.List;
 
+import it.unipi.hadoop.utility.Log;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.hash.Hash;
 
@@ -15,6 +16,8 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
     private int m;
     private int k;
     private BitSet arrayBF;
+
+    public BloomFilter(){}
 
     public BloomFilter(int m, int k) {
         this.m = m;
@@ -33,8 +36,8 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
     public void add(String title){
         int index;
         for(int i=0; i<k; i++){
-            index = (Hash.getInstance(Hash.MURMUR_HASH).hash(title.getBytes(StandardCharsets.UTF_8), k)) % m;
-            arrayBF.set(index);
+            index = Math.abs(Hash.getInstance(Hash.MURMUR_HASH).hash(title.getBytes(StandardCharsets.UTF_8), k)) % m;
+            arrayBF.set(index,true);
         }
     }
 
@@ -50,7 +53,12 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
 
     @Override
     public String toString() {
-        return ("m : " + this.m + "k : " + this.k + "BloomFilter : " + this.arrayBF.toString());
+        String result = "m : " + this.m + " k : " + this.k + " BloomFilter : \n";
+        StringBuilder s = new StringBuilder();
+        for( int i = 0; i < arrayBF.length();  i++ ) {
+            s.append( arrayBF.get( i ) == true ? 1: 0 );
+        }
+        return result + s;
     }
 
     public int compareTo(BloomFilter o) {
