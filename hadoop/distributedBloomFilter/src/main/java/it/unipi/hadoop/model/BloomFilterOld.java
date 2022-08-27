@@ -4,7 +4,6 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 
@@ -12,35 +11,33 @@ import it.unipi.hadoop.utility.Log;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.hash.Hash;
 
-public class BloomFilter implements Writable, Comparable<BloomFilter>{
+public class BloomFilterOld implements Writable, Comparable<BloomFilterOld>{
 
     private int m;
     private int k;
-    private boolean[] arrayBF;
+    private BitSet arrayBF;
 
-    public BloomFilter(){}
+    public BloomFilterOld(){}
 
-    public BloomFilter(int m, int k) {
+    public BloomFilterOld(int m, int k) {
         this.m = m;
         this.k = k;
-        this.arrayBF = new boolean[(int) m];
+        this.arrayBF = new BitSet((int) m);
     }
 
-    public BloomFilter(int m, int k, List<BloomFilter> arrayBFs) {
+    public BloomFilterOld(int m, int k, List<BloomFilterOld> arrayBFs) {
         this.m = m;
         this.k = k;
-        this.arrayBF = new boolean[(int) m];
-        for (BloomFilter bf : arrayBFs) {
-            for (int i = 0; i < this.m; i++)
-                this.arrayBF[i] |= bf.getArrayBF()[i];
-        }
+        this.arrayBF = new BitSet((int) m);
+        for (BloomFilterOld bf : arrayBFs)
+            this.arrayBF.or(bf.getArrayBF());
     }
 
     public void add(String title){
         int index;
         for(int i=0; i<k; i++){
             index = Math.abs(Hash.getInstance(Hash.MURMUR_HASH).hash(title.getBytes(StandardCharsets.UTF_8), i)) % m;
-            arrayBF[index] = true;
+            arrayBF.set(index,true);
         }
     }
 
@@ -48,7 +45,7 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
         int index;
         for(int i=0; i<k; i++) {
             index = Math.abs(Hash.getInstance(Hash.MURMUR_HASH).hash(title.getBytes(StandardCharsets.UTF_8), i)) % m;
-            if (!arrayBF[index])
+            if (arrayBF.get(index) == false)
                 return false;
         }
         return true;
@@ -58,14 +55,14 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
     public String toString() {
         String result = "m : " + this.m + " k : " + this.k + " BloomFilter : \n";
         StringBuilder s = new StringBuilder();
-        for (boolean b : arrayBF) {
-            s.append(b ? 1 : 0);
+        for( int i = 0; i < arrayBF.length();  i++ ) {
+            s.append( arrayBF.get( i ) == true ? 1: 0 );
         }
         return result + s;
     }
 
-    public int compareTo(BloomFilter o) {
-        if(this == o || (this.m == o.m && this.k == o.k && Arrays.equals(this.arrayBF, o.arrayBF)))
+    public int compareTo(BloomFilterOld o) {
+        if(this == o || (this.m == o.m && this.k == o.k && this.arrayBF.equals(o.arrayBF)))
             return 0;
         return 1;
     }
@@ -73,20 +70,24 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
     public void write(DataOutput out) throws IOException {
         out.writeInt(this.m);
         out.writeInt(this.k);
+        byte[] bytes = arrayBF.toByteArray();
 
-        for (int i = 0; i < this.m; i++) {
-            out.writeByte(this.arrayBF[i] ? 1 : 0);
+        out.writeInt(bytes.length);
+        for (int i = 0; i < bytes.length; i++) {
+            out.writeByte(bytes[i]);
         }
     }
 
     public void readFields(DataInput in) throws IOException {
         this.m = in.readInt();
         this.k = in.readInt();
-        this.arrayBF = new boolean[this.m];
+        int length = in.readInt();
+        byte[] bytes = new byte[length];
 
-        for (int i = 0; i < this.m; i++) {
-            arrayBF[i] = in.readByte() == 1;
+        for (int i = 0; i < length; i++) {
+            bytes[i] = in.readByte();
         }
+        this.arrayBF = BitSet.valueOf(bytes);
     }
 
     public int getM() {
@@ -105,11 +106,11 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
         this.k = k;
     }
 
-    public boolean[] getArrayBF() {
+    public BitSet getArrayBF() {
         return arrayBF;
     }
 
-    public void setArrayBF(boolean[] arrayBF) {
+    public void setArrayBF(BitSet arrayBF) {
         this.arrayBF = arrayBF;
     }
 }
