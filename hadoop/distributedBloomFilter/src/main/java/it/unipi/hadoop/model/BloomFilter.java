@@ -36,7 +36,7 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
     public void add(String title){
         int index;
         for(int i=0; i<k; i++){
-            index = Math.abs(Hash.getInstance(Hash.MURMUR_HASH).hash(title.getBytes(StandardCharsets.UTF_8), k)) % m;
+            index = Math.abs(Hash.getInstance(Hash.MURMUR_HASH).hash(title.getBytes(StandardCharsets.UTF_8), i)) % m;
             arrayBF.set(index,true);
         }
     }
@@ -44,7 +44,7 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
     public boolean find(String title){
         int index;
         for(int i=0; i<k; i++) {
-            index = (Hash.getInstance(Hash.MURMUR_HASH).hash(title.getBytes(StandardCharsets.UTF_8), k)) % m;
+            index = Math.abs(Hash.getInstance(Hash.MURMUR_HASH).hash(title.getBytes(StandardCharsets.UTF_8), i)) % m;
             if (arrayBF.get(index) == false)
                 return false;
         }

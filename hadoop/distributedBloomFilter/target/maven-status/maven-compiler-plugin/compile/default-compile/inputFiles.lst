@@ -1,0 +1,6 @@
+/mnt/c/Sviluppo/Distributed-BloomFilter/hadoop/distributedBloomFilter/src/main/java/it/unipi/hadoop/App.java
+/mnt/c/Sviluppo/Distributed-BloomFilter/hadoop/distributedBloomFilter/src/main/java/it/unipi/hadoop/stage/BloomFilterGeneration.java
+/mnt/c/Sviluppo/Distributed-BloomFilter/hadoop/distributedBloomFilter/src/main/java/it/unipi/hadoop/stage/BloomFilterValidation.java
+/mnt/c/Sviluppo/Distributed-BloomFilter/hadoop/distributedBloomFilter/src/main/java/it/unipi/hadoop/model/BloomFilter.java
+/mnt/c/Sviluppo/Distributed-BloomFilter/hadoop/distributedBloomFilter/src/main/java/it/unipi/hadoop/utility/Log.java
+/mnt/c/Sviluppo/Distributed-BloomFilter/hadoop/distributedBloomFilter/src/main/java/it/unipi/hadoop/stage/ParameterCalculation.java

@@ -1,3 +1,3 @@
 .idea
-/hadoop/distributedBloomFilter/.idea
-/hadoop/distributedBloomFilter/target
+hadoop/distributedBloomFilter/.idea/
+hadoop/distributedBloomFilter/target/
