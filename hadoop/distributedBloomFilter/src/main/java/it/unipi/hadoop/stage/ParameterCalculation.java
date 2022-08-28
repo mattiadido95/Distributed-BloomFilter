@@ -70,7 +70,7 @@ public class ParameterCalculation {
 
     }
 
-    public static void main(String[] args) throws Exception {
+    public static boolean main(String[] args) throws Exception {
         Configuration conf = new Configuration();
         String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
         if (otherArgs.length != 3) {
@@ -107,6 +107,6 @@ public class ParameterCalculation {
         job.setInputFormatClass(TextInputFormat.class);
         job.setOutputFormatClass(TextOutputFormat.class);
 
-        System.exit(job.waitForCompletion(true) ? 0 : 1);
+        return job.waitForCompletion(true);
     }
 }

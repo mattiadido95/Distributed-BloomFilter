@@ -126,7 +126,7 @@ public class BloomFilterGeneration {
 
     }
 
-    public static void main(String[] args) throws Exception {
+    public static boolean main(String[] args) throws Exception {
         Configuration conf = new Configuration();
         String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
         if (otherArgs.length != 2) {
@@ -173,6 +173,6 @@ public class BloomFilterGeneration {
         job.setInputFormatClass(TextInputFormat.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-        System.exit(job.waitForCompletion(true) ? 0 : 1);
+        return job.waitForCompletion(true);
     }
 }
