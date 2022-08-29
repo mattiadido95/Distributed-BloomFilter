@@ -1,6 +1,7 @@
 package it.unipi.hadoop.stage;
 
 import it.unipi.hadoop.model.BloomFilter;
+import it.unipi.hadoop.utility.ConfigManager;
 import it.unipi.hadoop.utility.Log;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -49,7 +50,7 @@ public class BloomFilterValidation {
 
         @Override
         protected void setup(Context context) throws IOException {
-            String path = "hdfs://hadoop-namenode:9820/user/hadoop/filter/part-r-00000";
+            String path = ConfigManager.getRoot() + ConfigManager.getOutputStage2() + "/part-r-00000";
             this.bf = readFilter(context.getConfiguration(), path);
             counter = new int[maxRating];
         }

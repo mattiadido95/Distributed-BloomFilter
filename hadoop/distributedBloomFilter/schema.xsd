@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="xmlConfig">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="falsePositiveRate">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:double">
+                            <xs:minInclusive value="0.01"/>
+                            <xs:maxExclusive value="1.00"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+
+                <xs:element name="input" type="xs:string"/>
+
+                <xs:element name="output">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="stage1" type="xs:string"/>
+                            <xs:element name="stage2" type="xs:string"/>
+                            <xs:element name="stage3" type="xs:string"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+
+                <xs:element name="root" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

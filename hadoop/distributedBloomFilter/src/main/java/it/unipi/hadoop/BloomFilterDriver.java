@@ -3,6 +3,7 @@ package it.unipi.hadoop;
 import it.unipi.hadoop.stage.BloomFilterGeneration;
 import it.unipi.hadoop.stage.BloomFilterValidation;
 import it.unipi.hadoop.stage.ParameterCalculation;
+import it.unipi.hadoop.utility.ConfigManager;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -33,25 +34,29 @@ public class BloomFilterDriver
     }
 
     public static void main( String[] args ) throws Exception {
-        String[] param1 = {"0.01", "data.tsv", "parameter"};
+        // load config file
+        ConfigManager.importConfig("config.xml", "schema.xsd");
+        ConfigManager.printConfig();
+
+        String[] param1 = {ConfigManager.getFalsePositiveRate() + "", ConfigManager.getInput(), ConfigManager.getOutputStage1()};
         if (!ParameterCalculation.main(param1)) {
             System.err.println("Stage 1 failed");
             return;
         }
 
-        String[] param2 = {"data.tsv", "filter"};
+        String[] param2 = {ConfigManager.getInput(), ConfigManager.getOutputStage2()};
         if (!BloomFilterGeneration.main(param2)) {
             System.err.println("Stage 2 failed");
             return;
         }
 
-        String[] param3 = {"data.tsv", "falsePositive"};
+        String[] param3 = {ConfigManager.getInput(), ConfigManager.getOutputStage3()};
         if (!BloomFilterValidation.main(param3)) {
             System.err.println("Stage 3 failed");
             return;
         }
 
-        String path = "hdfs://hadoop-namenode:9820/user/hadoop/falsePositive/part-r-00000";
+        String path = ConfigManager.getRoot() + ConfigManager.getOutputStage3() + "/part-r-00000";
         int[] falsePositive = percentageFalsePositive(new Configuration(), path);
         for (int i = 0; i < falsePositive.length; i++)
             System.out.println("Rating: " + (i + 1) + " False Positive Count : " + falsePositive[i]);

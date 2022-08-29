@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import it.unipi.hadoop.model.BloomFilter;
+import it.unipi.hadoop.utility.ConfigManager;
 import it.unipi.hadoop.utility.Log;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -155,7 +156,7 @@ public class BloomFilterGeneration {
 //        job.setNumReduceTasks(1);
 
         try {
-            int[] result = readFilterParameter(conf, "hdfs://hadoop-namenode:9820/user/hadoop/parameter/");
+            int[] result = readFilterParameter(conf, ConfigManager.getRoot() + ConfigManager.getOutputStage1() + "/");
             for(int i = 0; i < 10; i++) {
                 int index = ((i)*3);
                 job.getConfiguration().setInt("filter." + (i+1) + ".parameter.n", result[index]);
