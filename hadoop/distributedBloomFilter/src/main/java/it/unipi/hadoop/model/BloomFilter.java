@@ -12,10 +12,16 @@ import org.apache.hadoop.util.hash.Hash;
 
 public class BloomFilter implements Writable, Comparable<BloomFilter>{
 
+    /*
+    m = number of bit of the bloom filter
+    k = number of hash functions
+    arrayBF = BitSet structure representing our bloom filter (store indexes of set positions)
+     */
     private int m;
     private int k;
     private BitSet arrayBF;
 
+    // used in deserialization phase
     public BloomFilter(){}
 
     public BloomFilter(int m, int k) {
@@ -24,6 +30,7 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
         this.arrayBF = new BitSet((int) m);
     }
 
+    // used to create a bloom filter from a list of bloom filters
     public BloomFilter(int m, int k, List<BloomFilter> arrayBFs) {
         this.m = m;
         this.k = k;
@@ -32,6 +39,7 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
             this.arrayBF.or(bf.getArrayBF());
     }
 
+    // compute k MURMUR_HASH for a given title and set relative bits in bloom filter
     public void add(String title){
         int index;
         for(int i=0; i<k; i++){
@@ -39,7 +47,7 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
             arrayBF.set(index,true);
         }
     }
-
+    // return true only if it finds all the k bits, associated to the title, set
     public boolean find(String title){
         int index;
         for(int i=0; i<k; i++) {
@@ -54,6 +62,7 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
     public String toString() {
         String result = "m : " + this.m + " k : " + this.k + " BloomFilter : \n";
         StringBuilder s = new StringBuilder();
+        // transform BitSet representation to array boolean representation
         for( int i = 0; i < arrayBF.length();  i++ ) {
             s.append( arrayBF.get( i ) == true ? 1: 0 );
         }

@@ -16,6 +16,10 @@ import org.apache.hadoop.util.GenericOptionsParser;
 
 public class ParameterCalculation {
 
+    /*
+    input: title, rating
+    output: rating, n (number of films for that rating)
+     */
     public static class ParameterCalculationMapper extends Mapper<Object, Text, IntWritable, IntWritable> {
         private int[] counter;
         private final int maxRating = 10;
@@ -33,6 +37,7 @@ public class ParameterCalculation {
 
             String[] tokens = record.split("\t");
 
+            //skip file header
             if(tokens[0].equals("tconst"))
                 return;
 
@@ -46,11 +51,16 @@ public class ParameterCalculation {
         @Override
         protected void cleanup(Context context) throws IOException, InterruptedException {
             for (int i=0; i < maxRating; i++)
+                //emit only if there are films of rating i
                 if(counter[i] > 0)
                     context.write( new IntWritable(i+1), new IntWritable(counter[i]) );
         }
     }
 
+    /*
+    input: rating, n (number of films for that rating)
+    output: rating, (n,m,k) (parameter of the bloom filter)
+     */
     public static class ParameterCalculationReducer extends Reducer<IntWritable, IntWritable, IntWritable, Text> {
 
         @Override
@@ -59,6 +69,7 @@ public class ParameterCalculation {
             int m,k;
             double p = context.getConfiguration().getDouble("parameter.calculation.p",0.05);
 
+            // merge mapper's counters for rating = key
             for (IntWritable value : values)
                 n += value.get();
 

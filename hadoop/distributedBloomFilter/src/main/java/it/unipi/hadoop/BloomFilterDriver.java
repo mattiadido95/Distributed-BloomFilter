@@ -17,6 +17,11 @@ import java.io.InputStreamReader;
 import java.util.Iterator;
 
 public class BloomFilterDriver {
+    /*
+    Calculate false positive rate
+    input : configuration and path to the files to be read
+    return : false positive rates
+     */
     public static double[] percentageFalsePositive(Configuration conf, String pathString) throws IOException {
         int total_n = 0;
         int totalRating = 10;

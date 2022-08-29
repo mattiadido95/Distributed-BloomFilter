@@ -21,6 +21,12 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import java.io.*;
 
 public class BloomFilterValidation {
+
+    /*
+    Read bloom filter from HDFS
+    input : configuration and path to the files to be read
+    return : array of bloom filter
+     */
     private static BloomFilter[] readFilter(Configuration conf, String pathString) throws IOException {
         BloomFilter[] result = new BloomFilter[10];
         try {
@@ -42,11 +48,16 @@ public class BloomFilterValidation {
         return result;
     }
 
+    /*
+    input: title, rating
+    output: rating, false positive counter
+     */
     public static class BloomFilterValidationMapper extends Mapper<Object, Text, IntWritable, IntWritable> {
         private BloomFilter[] bf;
         private int[] counter;
         private final int maxRating = 10;
 
+        // load all the bloom filter and create counters for false positive rate
         @Override
         protected void setup(Context context) throws IOException {
             String path = "hdfs://hadoop-namenode:9820/user/hadoop/filter/part-r-00000";
@@ -62,6 +73,7 @@ public class BloomFilterValidation {
 
             String[] tokens = record.split("\t");
 
+            // skip file header
             if (tokens[0].equals("tconst"))
                 return;
 
@@ -73,6 +85,7 @@ public class BloomFilterValidation {
                     if (roundedRating == i+1)
                         continue;
 
+                    // increment counter if title is found in bloom filter
                     if (bf[i].find(tokens[0]))
                         counter[i]++;
                 }
@@ -82,6 +95,7 @@ public class BloomFilterValidation {
         @Override
         protected void cleanup(Context context) throws IOException, InterruptedException {
             for (int i = 0; i < maxRating; i++) {
+                // emit only if we found false positive counter for rating i
                 if (counter[i] > 0) {
                     context.write(new IntWritable(i + 1), new IntWritable(counter[i]));
                 }
@@ -89,11 +103,16 @@ public class BloomFilterValidation {
         }
     }
 
+    /*
+    input: rating, false positive counter
+    output: rating, false positive counter merged
+     */
     public static class BloomFilterValidationReducer extends Reducer<IntWritable, IntWritable, IntWritable, IntWritable> {
         @Override
         public void reduce(IntWritable key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
             int falsePositive = 0;
 
+            //merge false positive counter
             for (IntWritable counter : values)
                 falsePositive += counter.get();
 
@@ -130,6 +149,7 @@ public class BloomFilterValidation {
         FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
 
         job.setInputFormatClass(TextInputFormat.class);
+        //output in sequence file in order to read it with key-value
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         return job.waitForCompletion(true);
