@@ -57,7 +57,7 @@ public class BloomFilterDriver {
             if (!fileStatus.getPath().toString().endsWith("_SUCCESS")) {
 
                 try {
-                    Reader reader = new Reader(conf, Reader.file(new Path(fs1.open(fileStatus.getPath()).toString())));
+                    Reader reader = new Reader(conf, Reader.file(new Path(fileStatus.getPath().toString())));
 
                     IntWritable key = new IntWritable();
                     IntWritable value = new IntWritable();
