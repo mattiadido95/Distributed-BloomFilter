@@ -18,7 +18,7 @@ import java.util.Iterator;
 
 public class BloomFilterDriver {
     public static double[] percentageFalsePositive(Configuration conf, String pathString) throws IOException {
-        int total_n= 0;
+        int total_n = 0;
         int totalRating = 10;
         int[] result = new int[totalRating];
         String pathStage1 = "hdfs://hadoop-namenode:9820/user/hadoop/parameter/";
@@ -30,14 +30,14 @@ public class BloomFilterDriver {
             if (!fileStatus.getPath().toString().endsWith("_SUCCESS")) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
 
-                for(Iterator<String> it = br.lines().iterator(); it.hasNext(); ) {
+                for (Iterator<String> it = br.lines().iterator(); it.hasNext(); ) {
                     String line = it.next();
                     String[] tokens = line.split("\t");
                     int rating = Integer.parseInt(tokens[0]);
                     int n = Integer.parseInt(tokens[1]);
                     int m = Integer.parseInt(tokens[2]);
                     int k = Integer.parseInt(tokens[3]);
-                    result[(rating-1)] = n;
+                    result[(rating - 1)] = n;
                     total_n += n;
                 }
                 br.close();
@@ -63,12 +63,11 @@ public class BloomFilterDriver {
         }
 
         //Percentage calculation of false positives with respect to the total of n
-        double [] percentage = new double[totalRating];
-        for (int i=0; i< totalRating;i++){
+        double[] percentage = new double[totalRating];
+        for (int i = 0; i < totalRating; i++) {
             percentage[i] = (double) result2[i] / (double) (total_n - result[i]);
- //           System.out.println("Rating: " + (i + 1) + " total_n : " + total_n + "   n di "+ i + " "+ result[i]+ " false positive "+ result2[i]);
+            //           System.out.println("Rating: " + (i + 1) + " total_n : " + total_n + "   n di "+ i + " "+ result[i]+ " false positive "+ result2[i]);
         }
-
 
 
         return percentage;
