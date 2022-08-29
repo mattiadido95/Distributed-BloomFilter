@@ -3,6 +3,8 @@ package it.unipi.hadoop.stage;
 import it.unipi.hadoop.model.BloomFilter;
 import it.unipi.hadoop.utility.Log;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
@@ -28,21 +30,28 @@ public class BloomFilterValidation {
     return : array of bloom filter
      */
     private static BloomFilter[] readFilter(Configuration conf, String pathString) throws IOException {
+        Path pt = new Path(pathString);
         BloomFilter[] result = new BloomFilter[10];
-        try {
-            Path pt = new Path(pathString);
-            Reader reader = new Reader(conf, Reader.file(pt));
+        FileSystem fs = FileSystem.get(conf);
+        FileStatus[] status = fs.listStatus(pt);
+        for (FileStatus fileStatus : status) {
+            if (!fileStatus.getPath().toString().endsWith("_SUCCESS")) {
+                try {
+                    Reader reader = new Reader(conf, Reader.file(new Path(fs.open(fileStatus.getPath()).toString())));
 
-            IntWritable key = new IntWritable();
-            BloomFilter value = new BloomFilter();
-            while(reader.next(key, value)) {
-                int index = key.get() - 1;
-                result[index] = value;
-                key = new IntWritable();
-                value = new BloomFilter();
+                    IntWritable key = new IntWritable();
+                    BloomFilter value = new BloomFilter();
+                    while (reader.next(key, value)) {
+                        int index = key.get() - 1;
+                        result[index] = value;
+                        key = new IntWritable();
+                        value = new BloomFilter();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                fs.close();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
         return result;
@@ -60,7 +69,7 @@ public class BloomFilterValidation {
         // load all the bloom filter and create counters for false positive rate
         @Override
         protected void setup(Context context) throws IOException {
-            String path = "hdfs://hadoop-namenode:9820/user/hadoop/filter/part-r-00000";
+            String path = "hdfs://hadoop-namenode:9820/user/hadoop/filter/";
             this.bf = readFilter(context.getConfiguration(), path);
             counter = new int[maxRating];
         }

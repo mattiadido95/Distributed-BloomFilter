@@ -26,8 +26,7 @@ public class BloomFilterDriver {
         int total_n = 0;
         int totalRating = 10;
         int[] result = new int[totalRating];
-        String pathStage1 = "hdfs://hadoop-namenode:9820/user/hadoop/parameter/";
-        Path ptStage1 = new Path(pathStage1);
+        Path ptStage1 = new Path(pathString + "parameter/");
         FileSystem fs = FileSystem.get(conf);
         FileStatus[] status = fs.listStatus(ptStage1);
         // Extraction of the "n" for each rating (output stage1)
@@ -51,20 +50,28 @@ public class BloomFilterDriver {
         }
         // Extraction of false positives for each rating (output stage3)
         int[] result2 = new int[totalRating];
-        try {
-            Path pt = new Path(pathString);
-            Reader reader = new Reader(conf, Reader.file(pt));
+        Path pt = new Path(pathString + "falsePositive/");
+        FileSystem fs1 = FileSystem.get(conf);
+        FileStatus[] status1 = fs1.listStatus(pt);
+        for (FileStatus fileStatus : status1) {
+            if (!fileStatus.getPath().toString().endsWith("_SUCCESS")) {
 
-            IntWritable key = new IntWritable();
-            IntWritable value = new IntWritable();
-            while (reader.next(key, value)) {
-                int index = key.get() - 1;
-                result2[index] = value.get();
-                key = new IntWritable();
-                value = new IntWritable();
+                try {
+                    Reader reader = new Reader(conf, Reader.file(new Path(fs1.open(fileStatus.getPath()).toString())));
+
+                    IntWritable key = new IntWritable();
+                    IntWritable value = new IntWritable();
+                    while (reader.next(key, value)) {
+                        int index = key.get() - 1;
+                        result2[index] = value.get();
+                        key = new IntWritable();
+                        value = new IntWritable();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                fs1.close();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
         //Percentage calculation of false positives with respect to the total of n
@@ -112,7 +119,7 @@ public class BloomFilterDriver {
         Log.writeLog("stage-duration.txt", Float.toString(sec));
         System.out.println("- Stage 3 duration -> " + sec + " seconds"); // print Stage 3 duration
 
-        String path = "hdfs://hadoop-namenode:9820/user/hadoop/falsePositive/part-r-00000";
+        String path = "hdfs://hadoop-namenode:9820/user/hadoop/";
         double[] falsePositive = percentageFalsePositive(new Configuration(), path);
         for (int i = 0; i < falsePositive.length; i++)
             System.out.println("Rating: " + (i + 1) + " False Positive Count : " + falsePositive[i]);
