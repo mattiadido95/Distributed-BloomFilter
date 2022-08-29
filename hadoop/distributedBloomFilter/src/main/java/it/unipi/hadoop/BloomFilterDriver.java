@@ -87,7 +87,7 @@ public class BloomFilterDriver {
         }
         long end = System.currentTimeMillis(); // end first timer for Stage 1
         float sec = (end - start) / 1000F;
-        Log.writeLog("stage-duration.txt", Float.toString(sec));
+        Log.writeLocal("stage-duration.txt", Float.toString(sec));
         System.out.println("- Stage 1 duration -> " + sec + " seconds"); // print Stage 1 duration
 
         String[] param2 = {"data.tsv", "filter"};
@@ -98,7 +98,7 @@ public class BloomFilterDriver {
         }
         end = System.currentTimeMillis(); // stop second timer for Stage 2
         sec = (end - start) / 1000F;
-        Log.writeLog("stage-duration.txt", Float.toString(sec));
+        Log.writeLocal("stage-duration.txt", Float.toString(sec));
         System.out.println("- Stage 2 duration -> " + sec + " seconds"); // print Stage 2 duration
 
         String[] param3 = {"data.tsv", "falsePositive"};
@@ -109,10 +109,10 @@ public class BloomFilterDriver {
         }
         end = System.currentTimeMillis(); // stop third timer for Stage 3
         sec = (end - start) / 1000F;
-        Log.writeLog("stage-duration.txt", Float.toString(sec));
+        Log.writeLocal("stage-duration.txt", Float.toString(sec));
         System.out.println("- Stage 3 duration -> " + sec + " seconds"); // print Stage 3 duration
 
-        Log.writeLog("stage-duration.txt", "------ end execution ------");
+        Log.writeLocal("stage-duration.txt", "------ end execution ------");
 
         String path = "hdfs://hadoop-namenode:9820/user/hadoop/falsePositive/part-r-00000";
         double[] falsePositive = percentageFalsePositive(new Configuration(), path);
