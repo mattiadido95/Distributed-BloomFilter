@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xmlConfig>
+    <falsePositiveRate>0.01</falsePositiveRate>
+    <input>data.tsv</input>
+    <output>
+        <stage1>parameter</stage1>
+        <stage2>filter</stage2>
+        <stage3>falsePositive</stage3>
+    </output>
+    <root>hdfs://hadoop-namenode:9820/user/hadoop/</root>
+</xmlConfig>
