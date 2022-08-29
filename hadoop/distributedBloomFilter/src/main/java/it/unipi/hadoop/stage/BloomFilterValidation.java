@@ -50,10 +50,8 @@ public class BloomFilterValidation {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                fs.close();
             }
         }
-
         return result;
     }
 

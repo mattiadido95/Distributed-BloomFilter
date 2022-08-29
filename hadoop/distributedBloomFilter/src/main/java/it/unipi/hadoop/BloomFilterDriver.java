@@ -70,7 +70,6 @@ public class BloomFilterDriver {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                fs1.close();
             }
         }
 
