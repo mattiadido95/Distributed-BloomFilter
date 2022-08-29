@@ -4,40 +4,41 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.BitSet;
+import java.util.Arrays;
 import java.util.List;
 
-import it.unipi.hadoop.utility.Log;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.hash.Hash;
 
-public class BloomFilterOld implements Writable, Comparable<BloomFilterOld>{
+public class BloomFilterBoolean implements Writable, Comparable<BloomFilterBoolean>{
 
     private int m;
     private int k;
-    private BitSet arrayBF;
+    private boolean[] arrayBF;
 
-    public BloomFilterOld(){}
+    public BloomFilterBoolean(){}
 
-    public BloomFilterOld(int m, int k) {
+    public BloomFilterBoolean(int m, int k) {
         this.m = m;
         this.k = k;
-        this.arrayBF = new BitSet((int) m);
+        this.arrayBF = new boolean[(int) m];
     }
 
-    public BloomFilterOld(int m, int k, List<BloomFilterOld> arrayBFs) {
+    public BloomFilterBoolean(int m, int k, List<BloomFilterBoolean> arrayBFs) {
         this.m = m;
         this.k = k;
-        this.arrayBF = new BitSet((int) m);
-        for (BloomFilterOld bf : arrayBFs)
-            this.arrayBF.or(bf.getArrayBF());
+        this.arrayBF = new boolean[(int) m];
+        for (BloomFilterBoolean bf : arrayBFs) {
+            for (int i = 0; i < this.m; i++)
+                this.arrayBF[i] |= bf.getArrayBF()[i];
+        }
     }
 
     public void add(String title){
         int index;
         for(int i=0; i<k; i++){
             index = Math.abs(Hash.getInstance(Hash.MURMUR_HASH).hash(title.getBytes(StandardCharsets.UTF_8), i)) % m;
-            arrayBF.set(index,true);
+            arrayBF[index] = true;
         }
     }
 
@@ -45,7 +46,7 @@ public class BloomFilterOld implements Writable, Comparable<BloomFilterOld>{
         int index;
         for(int i=0; i<k; i++) {
             index = Math.abs(Hash.getInstance(Hash.MURMUR_HASH).hash(title.getBytes(StandardCharsets.UTF_8), i)) % m;
-            if (arrayBF.get(index) == false)
+            if (!arrayBF[index])
                 return false;
         }
         return true;
@@ -55,14 +56,14 @@ public class BloomFilterOld implements Writable, Comparable<BloomFilterOld>{
     public String toString() {
         String result = "m : " + this.m + " k : " + this.k + " BloomFilter : \n";
         StringBuilder s = new StringBuilder();
-        for( int i = 0; i < arrayBF.length();  i++ ) {
-            s.append( arrayBF.get( i ) == true ? 1: 0 );
+        for (boolean b : arrayBF) {
+            s.append(b ? 1 : 0);
         }
         return result + s;
     }
 
-    public int compareTo(BloomFilterOld o) {
-        if(this == o || (this.m == o.m && this.k == o.k && this.arrayBF.equals(o.arrayBF)))
+    public int compareTo(BloomFilterBoolean o) {
+        if(this == o || (this.m == o.m && this.k == o.k && Arrays.equals(this.arrayBF, o.arrayBF)))
             return 0;
         return 1;
     }
@@ -70,24 +71,20 @@ public class BloomFilterOld implements Writable, Comparable<BloomFilterOld>{
     public void write(DataOutput out) throws IOException {
         out.writeInt(this.m);
         out.writeInt(this.k);
-        byte[] bytes = arrayBF.toByteArray();
 
-        out.writeInt(bytes.length);
-        for (int i = 0; i < bytes.length; i++) {
-            out.writeByte(bytes[i]);
+        for (int i = 0; i < this.m; i++) {
+            out.writeByte(this.arrayBF[i] ? 1 : 0);
         }
     }
 
     public void readFields(DataInput in) throws IOException {
         this.m = in.readInt();
         this.k = in.readInt();
-        int length = in.readInt();
-        byte[] bytes = new byte[length];
+        this.arrayBF = new boolean[this.m];
 
-        for (int i = 0; i < length; i++) {
-            bytes[i] = in.readByte();
+        for (int i = 0; i < this.m; i++) {
+            arrayBF[i] = in.readByte() == 1;
         }
-        this.arrayBF = BitSet.valueOf(bytes);
     }
 
     public int getM() {
@@ -106,11 +103,11 @@ public class BloomFilterOld implements Writable, Comparable<BloomFilterOld>{
         this.k = k;
     }
 
-    public BitSet getArrayBF() {
+    public boolean[] getArrayBF() {
         return arrayBF;
     }
 
-    public void setArrayBF(BitSet arrayBF) {
+    public void setArrayBF(boolean[] arrayBF) {
         this.arrayBF = arrayBF;
     }
 }

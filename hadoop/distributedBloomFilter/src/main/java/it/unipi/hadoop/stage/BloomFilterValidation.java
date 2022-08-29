@@ -14,6 +14,7 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
@@ -26,16 +27,14 @@ public class BloomFilterValidation {
             Path pt = new Path(pathString);
             Reader reader = new Reader(conf, Reader.file(pt));
 
-            boolean hasNext;
-            do {
-                IntWritable key = new IntWritable();
-                BloomFilter value = new BloomFilter();
-                hasNext = reader.next(key, value);
-
+            IntWritable key = new IntWritable();
+            BloomFilter value = new BloomFilter();
+            while(reader.next(key, value)) {
                 int index = key.get() - 1;
                 result[index] = value;
-            } while(hasNext);
-
+                key = new IntWritable();
+                value = new BloomFilter();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -102,7 +101,7 @@ public class BloomFilterValidation {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static boolean main(String[] args) throws Exception {
         Configuration conf = new Configuration();
         String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
         if (otherArgs.length != 2) {
@@ -131,8 +130,8 @@ public class BloomFilterValidation {
         FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
 
         job.setInputFormatClass(TextInputFormat.class);
-        job.setOutputFormatClass(TextOutputFormat.class);
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-        System.exit(job.waitForCompletion(true) ? 0 : 1);
+        return job.waitForCompletion(true);
     }
 }
