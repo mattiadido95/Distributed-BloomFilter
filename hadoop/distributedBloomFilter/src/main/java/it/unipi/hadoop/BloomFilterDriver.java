@@ -57,7 +57,7 @@ public class BloomFilterDriver {
             if (!fileStatus.getPath().toString().endsWith("_SUCCESS")) {
 
                 try {
-                    Reader reader = new Reader(conf, Reader.file(new Path(fs1.open(fileStatus.getPath()).toString())));
+                    Reader reader = new Reader(conf, Reader.file(new Path(fileStatus.getPath().toString())));
 
                     IntWritable key = new IntWritable();
                     IntWritable value = new IntWritable();
@@ -70,7 +70,6 @@ public class BloomFilterDriver {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                fs1.close();
             }
         }
 
@@ -94,7 +93,7 @@ public class BloomFilterDriver {
         }
         long end = System.currentTimeMillis(); // end first timer for Stage 1
         float sec = (end - start) / 1000F;
-        Log.writeLog("stage-duration.txt", Float.toString(sec));
+        Log.writeLocal("stage-duration.txt", Float.toString(sec));
         System.out.println("- Stage 1 duration -> " + sec + " seconds"); // print Stage 1 duration
 
         String[] param2 = {"data.tsv", "filter"};
@@ -105,7 +104,7 @@ public class BloomFilterDriver {
         }
         end = System.currentTimeMillis(); // stop second timer for Stage 2
         sec = (end - start) / 1000F;
-        Log.writeLog("stage-duration.txt", Float.toString(sec));
+        Log.writeLocal("stage-duration.txt", Float.toString(sec));
         System.out.println("- Stage 2 duration -> " + sec + " seconds"); // print Stage 2 duration
 
         String[] param3 = {"data.tsv", "falsePositive"};
@@ -116,8 +115,10 @@ public class BloomFilterDriver {
         }
         end = System.currentTimeMillis(); // stop third timer for Stage 3
         sec = (end - start) / 1000F;
-        Log.writeLog("stage-duration.txt", Float.toString(sec));
+        Log.writeLocal("stage-duration.txt", Float.toString(sec));
         System.out.println("- Stage 3 duration -> " + sec + " seconds"); // print Stage 3 duration
+
+        Log.writeLocal("stage-duration.txt", "------ end execution ------");
 
         String path = "hdfs://hadoop-namenode:9820/user/hadoop/";
         double[] falsePositive = percentageFalsePositive(new Configuration(), path);

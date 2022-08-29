@@ -37,7 +37,7 @@ public class BloomFilterValidation {
         for (FileStatus fileStatus : status) {
             if (!fileStatus.getPath().toString().endsWith("_SUCCESS")) {
                 try {
-                    Reader reader = new Reader(conf, Reader.file(new Path(fs.open(fileStatus.getPath()).toString())));
+                    Reader reader = new Reader(conf, Reader.file(new Path(fileStatus.getPath().toString())));
 
                     IntWritable key = new IntWritable();
                     BloomFilter value = new BloomFilter();
@@ -50,10 +50,8 @@ public class BloomFilterValidation {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                fs.close();
             }
         }
-
         return result;
     }
 
