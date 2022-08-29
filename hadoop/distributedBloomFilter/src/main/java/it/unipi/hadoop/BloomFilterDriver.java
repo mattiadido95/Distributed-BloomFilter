@@ -112,6 +112,8 @@ public class BloomFilterDriver {
         Log.writeLog("stage-duration.txt", Float.toString(sec));
         System.out.println("- Stage 3 duration -> " + sec + " seconds"); // print Stage 3 duration
 
+        Log.writeLog("stage-duration.txt", "------ end execution ------");
+
         String path = "hdfs://hadoop-namenode:9820/user/hadoop/falsePositive/part-r-00000";
         double[] falsePositive = percentageFalsePositive(new Configuration(), path);
         for (int i = 0; i < falsePositive.length; i++)
