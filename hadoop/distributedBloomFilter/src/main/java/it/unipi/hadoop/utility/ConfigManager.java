@@ -1,68 +1,27 @@
 package it.unipi.hadoop.utility;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.security.AnyTypePermission;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.FileReader;
 
 public class ConfigManager {
-    public static XMLconfig config;
+    private static JSONObject config;
 
     public ConfigManager() {
     }
 
-    private static boolean XMLValidation(String xml, String xsd) {
+    @SuppressWarnings("unchecked")
+    public static boolean importConfig(String jsonPath) {
+        JSONParser parser = new JSONParser();
+        JSONObject jsonObject;
         try {
-            DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            Document d = db.parse(new File(xml));
-            Schema s = sf.newSchema(new StreamSource(xsd));
-            s.newValidator().validate(new DOMSource(d));
-
-        } catch(Exception e) {
-            if(e instanceof SAXException)
-                System.err.println("XML validation error: " + e.getMessage());
-            else
-                System.err.println(e.getMessage());
-
+            Object obj = parser.parse(new FileReader(jsonPath));
+            config = (JSONObject) obj;
+        } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
-
-        return true;
-    }
-
-    public static boolean importConfig(String xmlPath, String xsdPath) {
-        if (!XMLValidation(xmlPath, xsdPath)) {
-            System.err.println("XML validation failed");
-            return false;
-        }
-
-        XStream xs = new XStream();
-        xs.processAnnotations(XMLconfig.class);
-        xs.addPermission(AnyTypePermission.ANY);
-        String importedXML;
-
-        try {
-            importedXML = new String(Files.readAllBytes(Paths.get(xmlPath)));
-        } catch(Exception e) {
-            System.err.println("XML loading failed");
-            System.err.println(e.getMessage());
-            return false;
-        }
-        XMLconfig newConfig = (XMLconfig)xs.fromXML(importedXML);
-        System.out.println("Configuration loaded");
-        config = newConfig;
 
         return true;
     }
@@ -71,27 +30,28 @@ public class ConfigManager {
         System.out.println(config.toString());
     }
 
-    public static double getFalsePositiveRate() {
-        return config.getFalsePositiveRate();
-    }
+    public static double getFalsePositiveRate() { return (double) config.get("falsePositiveRate"); }
 
     public static String getInput() {
-        return config.getInput();
+        return (String) config.get("input");
     }
 
     public static String getOutputStage1() {
-        return config.getOutput().getStage1();
+        JSONObject output = (JSONObject) config.get("output");
+        return (String) output.get("stage1");
     }
 
     public static String getOutputStage2() {
-        return config.getOutput().getStage2();
+        JSONObject output = (JSONObject) config.get("output");
+        return (String) output.get("stage2");
     }
 
     public static String getOutputStage3() {
-        return config.getOutput().getStage3();
+        JSONObject output = (JSONObject) config.get("output");
+        return (String) output.get("stage3");
     }
 
     public static String getRoot() {
-        return config.getRoot();
+        return (String) config.get("root");
     }
 }

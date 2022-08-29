@@ -2,11 +2,9 @@ package it.unipi.hadoop.stage;
 
 import it.unipi.hadoop.model.BloomFilter;
 import it.unipi.hadoop.utility.ConfigManager;
-import it.unipi.hadoop.utility.Log;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -16,15 +14,15 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 import java.io.*;
 
 public class BloomFilterValidation {
-    private static BloomFilter[] readFilter(Configuration conf, String pathString) throws IOException {
+    private static BloomFilter[] readFilter(Configuration conf) throws IOException {
         BloomFilter[] result = new BloomFilter[10];
         try {
+            String pathString = conf.getStrings("filter.path")[0];
             Path pt = new Path(pathString);
             Reader reader = new Reader(conf, Reader.file(pt));
 
@@ -50,8 +48,7 @@ public class BloomFilterValidation {
 
         @Override
         protected void setup(Context context) throws IOException {
-            String path = ConfigManager.getRoot() + ConfigManager.getOutputStage2() + "/part-r-00000";
-            this.bf = readFilter(context.getConfiguration(), path);
+            this.bf = readFilter(context.getConfiguration());
             counter = new int[maxRating];
         }
 
@@ -132,6 +129,8 @@ public class BloomFilterValidation {
 
         job.setInputFormatClass(TextInputFormat.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
+
+        job.getConfiguration().setStrings("filter.path", ConfigManager.getRoot() + ConfigManager.getOutputStage2() + "/part-r-00000");
 
         return job.waitForCompletion(true);
     }

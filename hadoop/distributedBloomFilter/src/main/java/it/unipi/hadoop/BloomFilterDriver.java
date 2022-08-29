@@ -35,8 +35,7 @@ public class BloomFilterDriver
 
     public static void main( String[] args ) throws Exception {
         // load config file
-        ConfigManager.importConfig("config.xml", "schema.xsd");
-        ConfigManager.printConfig();
+        ConfigManager.importConfig("config.json");
 
         String[] param1 = {ConfigManager.getFalsePositiveRate() + "", ConfigManager.getInput(), ConfigManager.getOutputStage1()};
         if (!ParameterCalculation.main(param1)) {
