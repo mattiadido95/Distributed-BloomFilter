@@ -10,6 +10,11 @@ import org.apache.hadoop.io.SequenceFile.Reader;
 
 public class BloomFilterDriver
 {
+    /*
+    Calculate false positive rate
+    input : configuration and path to the files to be read
+    return : array of bloom filter parameters
+     */
     public static int[] percentageFalsePositive(Configuration conf, String pathString) {
         int[] result = new int[10];
 
