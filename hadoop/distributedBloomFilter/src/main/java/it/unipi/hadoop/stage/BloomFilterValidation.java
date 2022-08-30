@@ -1,13 +1,12 @@
 package it.unipi.hadoop.stage;
 
 import it.unipi.hadoop.model.BloomFilter;
-import it.unipi.hadoop.utility.Log;
+import it.unipi.hadoop.utility.ConfigManager;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -17,7 +16,6 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 import java.io.*;
@@ -29,7 +27,8 @@ public class BloomFilterValidation {
     input : configuration and path to the files to be read
     return : array of bloom filter
      */
-    private static BloomFilter[] readFilter(Configuration conf, String pathString) throws IOException {
+    private static BloomFilter[] readFilter(Configuration conf) throws IOException {
+        String pathString = conf.getStrings("filter.path")[0];
         Path pt = new Path(pathString);
         BloomFilter[] result = new BloomFilter[10];
         FileSystem fs = FileSystem.get(conf);
@@ -67,8 +66,7 @@ public class BloomFilterValidation {
         // load all the bloom filter and create counters for false positive rate
         @Override
         protected void setup(Context context) throws IOException {
-            String path = "hdfs://hadoop-namenode:9820/user/hadoop/filter/";
-            this.bf = readFilter(context.getConfiguration(), path);
+            this.bf = readFilter(context.getConfiguration());
             counter = new int[maxRating];
         }
 
@@ -158,6 +156,8 @@ public class BloomFilterValidation {
         job.setInputFormatClass(TextInputFormat.class);
         //output in sequence file in order to read it with key-value
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
+
+        job.getConfiguration().setStrings("filter.path", ConfigManager.getRoot() + ConfigManager.getOutputStage2() + "/");
 
         return job.waitForCompletion(true);
     }
