@@ -4,6 +4,7 @@ import it.unipi.hadoop.stage.BloomFilterGeneration;
 import it.unipi.hadoop.stage.BloomFilterValidation;
 import it.unipi.hadoop.stage.ParameterCalculation;
 import it.unipi.hadoop.utility.Log;
+import it.unipi.hadoop.utility.ConfigManager;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -26,7 +27,7 @@ public class BloomFilterDriver {
         int total_n = 0;
         int totalRating = 10;
         int[] result = new int[totalRating];
-        Path ptStage1 = new Path(pathString + "parameter/");
+        Path ptStage1 = new Path(pathString + ConfigManager.getOutputStage1() + "/");
         FileSystem fs = FileSystem.get(conf);
         FileStatus[] status = fs.listStatus(ptStage1);
         // Extraction of the "n" for each rating (output stage1)
@@ -50,7 +51,7 @@ public class BloomFilterDriver {
         }
         // Extraction of false positives for each rating (output stage3)
         int[] result2 = new int[totalRating];
-        Path pt = new Path(pathString + "falsePositive/");
+        Path pt = new Path(pathString + ConfigManager.getOutputStage3() + "/");
         FileSystem fs1 = FileSystem.get(conf);
         FileStatus[] status1 = fs1.listStatus(pt);
         for (FileStatus fileStatus : status1) {
@@ -85,7 +86,10 @@ public class BloomFilterDriver {
     }
 
     public static void main(String[] args) throws Exception {
-        String[] param1 = {"0.01", "data.tsv", "parameter"};
+        // load config file
+        ConfigManager.importConfig("config.json");
+
+        String[] param1 = {ConfigManager.getFalsePositiveRate() + "", ConfigManager.getInput(), ConfigManager.getOutputStage1()};
         long start = System.currentTimeMillis(); // start first timer for Stage 1
         if (!ParameterCalculation.main(param1)) {
             System.err.println("Stage 1 failed");
@@ -96,7 +100,7 @@ public class BloomFilterDriver {
         Log.writeLocal("stage-duration.txt", Float.toString(sec));
         System.out.println("- Stage 1 duration -> " + sec + " seconds"); // print Stage 1 duration
 
-        String[] param2 = {"data.tsv", "filter"};
+        String[] param2 = {ConfigManager.getInput(), ConfigManager.getOutputStage2()};
         start = System.currentTimeMillis(); // start second timer for Stage 2
         if (!BloomFilterGeneration.main(param2)) {
             System.err.println("Stage 2 failed");
@@ -107,7 +111,7 @@ public class BloomFilterDriver {
         Log.writeLocal("stage-duration.txt", Float.toString(sec));
         System.out.println("- Stage 2 duration -> " + sec + " seconds"); // print Stage 2 duration
 
-        String[] param3 = {"data.tsv", "falsePositive"};
+        String[] param3 = {ConfigManager.getInput(), ConfigManager.getOutputStage3()};
         start = System.currentTimeMillis(); // start third timer for Stage 3
         if (!BloomFilterValidation.main(param3)) {
             System.err.println("Stage 3 failed");
@@ -120,7 +124,7 @@ public class BloomFilterDriver {
 
         Log.writeLocal("stage-duration.txt", "------ end execution ------");
 
-        String path = "hdfs://hadoop-namenode:9820/user/hadoop/";
+        String path = ConfigManager.getRoot();
         double[] falsePositive = percentageFalsePositive(new Configuration(), path);
         for (int i = 0; i < falsePositive.length; i++)
             System.out.println("Rating: " + (i + 1) + " False Positive Count : " + falsePositive[i]);
