@@ -1,3 +1,4 @@
 .idea
 hadoop/distributedBloomFilter/.idea/
 hadoop/distributedBloomFilter/target/
+spark/model/__pycache__/
