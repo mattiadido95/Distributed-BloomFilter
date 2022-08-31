@@ -1,0 +1,10 @@
+{
+  "falsePositiveRate" : 0.01,
+  "input" : "data.tsv",
+  "output" : {
+    "stage1" : "parameter",
+    "stage2" : "filter",
+    "stage3" : "falsePositive"
+  },
+  "root" : "hdfs://hadoop-namenode:9820/user/hadoop/"
+}
