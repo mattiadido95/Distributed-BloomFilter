@@ -1,81 +1,67 @@
+import json
 import math
-import sys
 import time
-import os
-from pyspark import SparkContext
 from decimal import Decimal, ROUND_HALF_UP
-import math
-import configparser
+from pyspark import SparkContext
 from model.bloom_filter import BloomFilter
+from utils import *
 
-p = 0.01
+config = 0
+with open('config.json') as f:
+    config = json.load(f)
+
+p = config['p']
 
 
+# (map function) from input line get title and rounded rating
 def word_split(line):
     items = line.split("\t")
     return items[0], int(Decimal(items[1]).quantize(0, ROUND_HALF_UP))
 
+
+# (map function) count the number of films for each rating
 def counter_rating(rows):
     counter = [0 for _ in range(10)]
     for row in rows:
-        counter[row[1]-1] = counter[row[1]-1] + 1
-    rating = range(1, 11)
-    return zip(rating, counter)
-
-def parameters(count_rating):
-    n = count_rating[1]
-    m = int(- (n * math.log(p)) / (math.pow(math.log(2), 2.0)))
-    k = int((m / n) * math.log(2))
-    return count_rating[0], n, m, k
+        counter[row[1] - 1] = counter[row[1] - 1] + 1
+    return zip(range(1, 11), counter)
 
 
+# (map function) create a bloomfilter for each rating
 def bf_creation(rows):
     bloomfilters = [BloomFilter(m, k) for r, n, m, k, in parameter_rating.value]
     for row in rows:  # (title, rating) = row
         bloomfilters[row[1] - 1].add(row[0])
-
-    rating = range(1, 11)
-    return zip(rating, bloomfilters)
+    return zip(range(1, 11), bloomfilters)
 
 
+# (map function) count the number of false positive for each rating
 def bf_compare(rows):
     counter = [0 for _ in range(10)]
     for row in rows:
         for i in range(10):
-            if (i+1) == row[1]:
+            if (i + 1) == row[1]:
                 continue
-            if(rdd_bf.value[i][1].find(row[0])):
+            if rdd_bf.value[i][1].find(row[0]):
                 counter[i] = counter[i] + 1
-    rating = range(1, 11)
-    return zip(rating, counter)
+    return zip(range(1, 11), counter)
 
-
-
-def ciao(x,y):
-    return x[1] + y[1]
 
 if __name__ == '__main__':
-    master = "yarn"
-    if len(sys.argv) == 2:
-        master = sys.argv[1]
-
-
-    sc = SparkContext(master, "BloomFilter")
+    sc = SparkContext(config['master'], "BloomFilter")
     sc.addPyFile("bloom_filter.zip")
 
     # stage1
     start1 = time.time()
 
-    # rdd_input = sc.textFile("data.tsv").zipWithIndex().filter(lambda kv: kv[1] > 0).keys()
-    rdd_input = sc.textFile("data.tsv").filter(lambda kv: kv != "tconst\taverageRating\tnumVotes")
+    rdd_input = sc.textFile(config['input']).filter(lambda kv: kv != "tconst\taverageRating\tnumVotes")
     rdd_title_rating = rdd_input.map(word_split)
     count_rating = rdd_title_rating.mapPartitions(counter_rating)
-    count_rating = count_rating.reduceByKey(lambda x , y : x + y).sortByKey()# (rating, count_rating)
-    #parameter_rating = sc.broadcast(count_rating.map(parameters).collect())
+    count_rating = count_rating.reduceByKey(lambda x, y: x + y).sortByKey()  # (rating, count_rating)
     param = []
-    ntot= 0
-    for x,n in count_rating.collect():
-        ntot = ntot + n
+    n_tot = 0
+    for x, n in count_rating.collect():
+        n_tot = n_tot + n
         m = int(- (n * math.log(p)) / (math.pow(math.log(2), 2.0)))
         k = int((m / n) * math.log(2))
         param.append((x, n, m, k))
@@ -83,30 +69,28 @@ if __name__ == '__main__':
 
     elapsed_time_stage1 = time.time() - start1
 
-
     # stage2
     start2 = time.time()
-    rdd_bf = sc.broadcast(rdd_title_rating.mapPartitions(bf_creation).reduceByKey(lambda x,y : x.or_b2b(y)).sortByKey().collect())
-    #parameter_rating.destroy() #remove the broadcast variable from both executors and driver
-    #for x,y in rdd_bf.collect():
-    #    print(str(x) +" "+ str(y.get()))
+
+    rdd_bf = sc.broadcast(
+        rdd_title_rating.mapPartitions(bf_creation).reduceByKey(lambda x, y: x.merge(y)).sortByKey().collect())
+    parameter_rating.destroy()  # remove the broadcast variable from both executors and driver
+
     elapsed_time_stage2 = time.time() - start2
 
-    #stage3
+    # stage3
     start3 = time.time()
-    rdd_compare = rdd_title_rating.mapPartitions(bf_compare).reduceByKey(lambda x,y : x + y).sortByKey()
+
+    rdd_compare = rdd_title_rating.mapPartitions(bf_compare).reduceByKey(lambda x, y: x + y).sortByKey()
+    rdd_bf.destroy()
     percentage = []
     for rating, false_positive in rdd_compare.collect():
-        percentage.append((rating,false_positive/ (ntot-param[rating-1][1])))
+        percentage.append((rating, false_positive / (n_tot - param[rating - 1][1])))
+
     elapsed_time_stage3 = time.time() - start3
 
-    with open("stage-durationSpark.txt", "a") as f:
-        f.write(str(elapsed_time_stage1) + "\n")
-        f.write(str(elapsed_time_stage2) + "\n")
-        f.write(str(elapsed_time_stage3) + "\n")
-        f.write("------ end execution ------\n")
-
-    for x, y in percentage:
-        print(str(x) + "\t" + str(y))
-
-
+    # write results on file
+    smm = elapsed_time_stage3 + elapsed_time_stage2 + elapsed_time_stage1
+    write_output(percentage, config['output_file'])
+    times = [elapsed_time_stage1, elapsed_time_stage2, elapsed_time_stage3]
+    write_duration(p, times, config['stats_file'])

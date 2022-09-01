@@ -2,3 +2,4 @@
 hadoop/distributedBloomFilter/.idea/
 hadoop/distributedBloomFilter/target/
 spark/model/__pycache__/
+spark/bloom_filter.zip
