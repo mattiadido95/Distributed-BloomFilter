@@ -12,9 +12,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile.Reader;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.Iterator;
 
 public class BloomFilterDriver {
@@ -122,11 +120,17 @@ public class BloomFilterDriver {
         Log.writeLocal("stage-duration.txt", Float.toString(sec));
         System.out.println("- Stage 3 duration -> " + sec + " seconds"); // print Stage 3 duration
 
-        Log.writeLocal("stage-duration.txt", "------ end execution ------");
+        Log.writeLocal(ConfigManager.getStatsFile(), "------ end execution ------");
 
         String path = ConfigManager.getRoot();
         double[] falsePositive = percentageFalsePositive(new Configuration(), path);
         for (int i = 0; i < falsePositive.length; i++)
             System.out.println("Rating: " + (i + 1) + " False Positive Count : " + falsePositive[i]);
+
+        // write results on output file
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(ConfigManager.getOutputFile()), "utf-8"))) {
+            for (int i = 0; i < falsePositive.length; i++)
+                writer.write((i + 1) + "," + falsePositive[i] + "\n");
+        }
     }
 }

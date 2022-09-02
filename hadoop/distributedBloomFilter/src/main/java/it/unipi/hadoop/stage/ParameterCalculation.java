@@ -1,6 +1,8 @@
 package it.unipi.hadoop.stage;
 
 import java.io.IOException;
+
+import it.unipi.hadoop.utility.ConfigManager;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.conf.Configuration;
@@ -9,6 +11,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.NLineInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
@@ -115,8 +118,12 @@ public class ParameterCalculation {
         FileInputFormat.addInputPath(job, new Path(otherArgs[1]));
         FileOutputFormat.setOutputPath(job, new Path(otherArgs[2]));
 
-        job.setInputFormatClass(TextInputFormat.class);
+        job.setInputFormatClass(NLineInputFormat.class);
         job.setOutputFormatClass(TextOutputFormat.class);
+
+        // setup number of map and reduce
+        NLineInputFormat.setNumLinesPerSplit(job, ConfigManager.getLinesPerMapStage1());
+        job.setNumReduceTasks(ConfigManager.getNReducerStage1());
 
         return job.waitForCompletion(true);
     }
