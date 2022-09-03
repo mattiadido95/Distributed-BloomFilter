@@ -44,7 +44,7 @@ public class BloomFilterDriver {
                     total_n += n;
                 }
                 br.close();
-                fs.close();
+                //fs.close();
             }
         }
         // Extraction of false positives for each rating (output stage3)
@@ -75,10 +75,10 @@ public class BloomFilterDriver {
         //Percentage calculation of false positives with respect to the total of n
         double[] percentage = new double[totalRating];
         for (int i = 0; i < totalRating; i++) {
+            System.out.println(i + " | n = " + result[i] + " | fp = " + result2[i]);
             percentage[i] = (double) result2[i] / (double) (total_n - result[i]);
             //           System.out.println("Rating: " + (i + 1) + " total_n : " + total_n + "   n di "+ i + " "+ result[i]+ " false positive "+ result2[i]);
         }
-
 
         return percentage;
     }
@@ -95,7 +95,7 @@ public class BloomFilterDriver {
         }
         long end = System.currentTimeMillis(); // end first timer for Stage 1
         float sec = (end - start) / 1000F;
-        Log.writeLocal("stage-duration.txt", Float.toString(sec));
+        Log.writeLocal(ConfigManager.getStatsFile(), Float.toString(sec));
         System.out.println("- Stage 1 duration -> " + sec + " seconds"); // print Stage 1 duration
 
         String[] param2 = {ConfigManager.getInput(), ConfigManager.getOutputStage2()};
@@ -106,7 +106,7 @@ public class BloomFilterDriver {
         }
         end = System.currentTimeMillis(); // stop second timer for Stage 2
         sec = (end - start) / 1000F;
-        Log.writeLocal("stage-duration.txt", Float.toString(sec));
+        Log.writeLocal(ConfigManager.getStatsFile(), Float.toString(sec));
         System.out.println("- Stage 2 duration -> " + sec + " seconds"); // print Stage 2 duration
 
         String[] param3 = {ConfigManager.getInput(), ConfigManager.getOutputStage3()};
@@ -117,7 +117,7 @@ public class BloomFilterDriver {
         }
         end = System.currentTimeMillis(); // stop third timer for Stage 3
         sec = (end - start) / 1000F;
-        Log.writeLocal("stage-duration.txt", Float.toString(sec));
+        Log.writeLocal(ConfigManager.getStatsFile(), Float.toString(sec));
         System.out.println("- Stage 3 duration -> " + sec + " seconds"); // print Stage 3 duration
 
         Log.writeLocal(ConfigManager.getStatsFile(), "------ end execution ------");
