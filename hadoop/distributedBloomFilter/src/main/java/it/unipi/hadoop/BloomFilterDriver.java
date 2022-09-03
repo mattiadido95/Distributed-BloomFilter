@@ -44,7 +44,7 @@ public class BloomFilterDriver {
                     total_n += n;
                 }
                 br.close();
-                fs.close();
+                //fs.close();
             }
         }
         // Extraction of false positives for each rating (output stage3)
@@ -75,10 +75,11 @@ public class BloomFilterDriver {
         //Percentage calculation of false positives with respect to the total of n
         double[] percentage = new double[totalRating];
         for (int i = 0; i < totalRating; i++) {
+            System.out.println(i + " | n = " + result[i] + " | fp = " + result2[i]);
             percentage[i] = (double) result2[i] / (double) (total_n - result[i]);
             //           System.out.println("Rating: " + (i + 1) + " total_n : " + total_n + "   n di "+ i + " "+ result[i]+ " false positive "+ result2[i]);
         }
-        
+
         return percentage;
     }
 

@@ -29,7 +29,7 @@ public class Log {
             br.newLine();
 
             br.close();
-            hdfs.close();
+            // hdfs.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -55,7 +55,7 @@ public class BloomFilterGeneration {
                     result[(rating-1)*3+2] = k;
                 }
                 br.close();
-                fs.close();
+                // fs.close();
             }
         }
         return result;
