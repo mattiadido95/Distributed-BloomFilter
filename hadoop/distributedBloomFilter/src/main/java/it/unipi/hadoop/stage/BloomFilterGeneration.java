@@ -132,25 +132,9 @@ public class BloomFilterGeneration {
 
         @Override
         public void reduce(IntWritable key, Iterable<BloomFilter> values, Context context) throws IOException, InterruptedException {
-//            BloomFilter bfTot;
-//            List<BloomFilter> bfs = new ArrayList<>();
-//            // merge mapper's bloom filters for rating = key
-//            for(BloomFilter bf : values) {
-//                Log.writeLog("Stage2_" + context.getTaskAttemptID().getTaskID() + ".txt","Reduce_value : " + "\t" + bf.getArrayBF().length() + "\n");
-//                bfs.add(bf);
-//            }
+            BloomFilter bfTot = new BloomFilter(values);
 
-            BloomFilter bfTot = new BloomFilter(values.iterator().next());
-            while(values.iterator().hasNext()) {
-                bfTot.or(values.iterator().next().getArrayBF());
-            }
-
-            //Log.writeLog("Stage2_" + context.getTaskAttemptID().getTaskID() + ".txt","Reduce : " + "\t" + key + "\t" + bfs.size() + "\n");
-
-            int m = context.getConfiguration().getInt("filter." + (key.get()) + ".parameter.m",0);
-            int k = context.getConfiguration().getInt("filter." + (key.get()) + ".parameter.k",0);
-            //bfTot = new BloomFilter(m,k,bfs);
-//            Log.writeLog("Stage2.txt","Reducer : " + context.getTaskAttemptID().getTaskID() + "\t" + m + "\t" + k + "\n" + bfTot);
+            //Log.writeLog("Stage2.txt","Reducer : " + context.getTaskAttemptID().getTaskID() + "\n" + bfTot);
             context.write(key, bfTot);
         }
 
