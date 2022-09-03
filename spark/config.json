@@ -1,0 +1,7 @@
+{
+  "input": "data.tsv",
+  "p": 0.01,
+  "master": "yarn",
+  "stats_file": "stage-durationSpark.txt",
+  "output_file": "output.csv"
+}

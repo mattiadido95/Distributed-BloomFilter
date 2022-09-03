@@ -13,6 +13,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.NLineInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
@@ -153,9 +154,13 @@ public class BloomFilterValidation {
         FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
         FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
 
-        job.setInputFormatClass(TextInputFormat.class);
+        job.setInputFormatClass(NLineInputFormat.class);
         //output in sequence file in order to read it with key-value
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
+
+        // setup number of map and reduce
+        NLineInputFormat.setNumLinesPerSplit(job, ConfigManager.getLinesPerMapStage3());
+        job.setNumReduceTasks(ConfigManager.getNReducerStage3());
 
         job.getConfiguration().setStrings("filter.path", ConfigManager.getRoot() + ConfigManager.getOutputStage2() + "/");
 

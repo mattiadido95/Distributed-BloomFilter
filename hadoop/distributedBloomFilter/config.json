@@ -6,5 +6,17 @@
     "stage2" : "filter",
     "stage3" : "falsePositive"
   },
-  "root" : "hdfs://hadoop-namenode:9820/user/hadoop/"
+  "linesPerMap" : {
+    "stage1" : 1256196,
+    "stage2" : 1256196,
+    "stage3" : 1256196
+  },
+  "nReducer" : {
+    "stage1" : 1,
+    "stage2" : 1,
+    "stage3" : 1
+  },
+  "root" : "hdfs://hadoop-namenode:9820/user/hadoop/",
+  "statsFile": "stage-duration-hadoop.txt",
+  "outputFile": "output-hadoop.csv"
 }

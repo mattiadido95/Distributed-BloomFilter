@@ -17,7 +17,7 @@ class BloomFilter:
                 return False
         return True
 
-    def or_b2b(self,bf):
+    def merge(self, bf):
         self.array_bf = [x|y for x,y in zip(self.array_bf, bf.get())]
         return self
 
