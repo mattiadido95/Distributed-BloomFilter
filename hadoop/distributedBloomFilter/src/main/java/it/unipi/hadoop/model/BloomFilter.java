@@ -30,6 +30,12 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
         this.arrayBF = new BitSet((int) m);
     }
 
+    public BloomFilter(BloomFilter bf){
+        this.arrayBF = (BitSet) bf.arrayBF.clone();
+        this.m = bf.m;
+        this.k = bf.k;
+    }
+
     // used to create a bloom filter from a list of bloom filters
     public BloomFilter(int m, int k, List<BloomFilter> arrayBFs) {
         this.m = m;
@@ -56,6 +62,10 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
                 return false;
         }
         return true;
+    }
+
+    public void or(BitSet input){
+        this.arrayBF.or(input);
     }
 
     @Override
@@ -115,7 +125,7 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
     }
 
     public BitSet getArrayBF() {
-        return arrayBF;
+        return this.arrayBF;
     }
 
     public void setArrayBF(BitSet arrayBF) {
