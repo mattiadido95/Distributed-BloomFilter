@@ -85,6 +85,7 @@ public class BloomFilterGeneration {
                     bf[i] = null;
                 else
                     bf[i] = new BloomFilter(m,k);
+                Log.writeLog("Stage2_" + context.getTaskAttemptID().getTaskID() + ".txt","Map_setup : " + context.getTaskAttemptID().getTaskID() + "\t" + i + "\t" +  m + "\n");
             }
         }
 
@@ -116,7 +117,7 @@ public class BloomFilterGeneration {
             for (int i = 0; i < maxRating; i++)
                 // emit only if bloom filter exists
                 if (bf[i] != null) {
-                    //Log.writeLog(context.getConfiguration(),"Cleanup : " + bf[i].toString());
+                    Log.writeLog("Stage2_" + context.getTaskAttemptID().getTaskID() + ".txt","Map_cleanup : " + context.getTaskAttemptID().getTaskID() + "\t" + i + "\t" + bf[i].getArrayBF().length()+ "\n");
                     context.write(new IntWritable(i + 1), bf[i]);
             }
         }
@@ -131,17 +132,9 @@ public class BloomFilterGeneration {
 
         @Override
         public void reduce(IntWritable key, Iterable<BloomFilter> values, Context context) throws IOException, InterruptedException {
-            BloomFilter bfTot;
-            List<BloomFilter> bfs = new ArrayList<>();
+            BloomFilter bfTot = new BloomFilter(values);
 
-            // merge mapper's bloom filters for rating = key
-            for(BloomFilter bf : values)
-                bfs.add(bf);
-
-            int m = context.getConfiguration().getInt("filter." + (key.get()) + ".parameter.m",0);
-            int k = context.getConfiguration().getInt("filter." + (key.get()) + ".parameter.k",0);
-            //Log.writeLog("Reducer : " + m + "\t" + k);
-            bfTot = new BloomFilter(m,k,bfs);
+            //Log.writeLog("Stage2.txt","Reducer : " + context.getTaskAttemptID().getTaskID() + "\n" + bfTot);
             context.write(key, bfTot);
         }
 
