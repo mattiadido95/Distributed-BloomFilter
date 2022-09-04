@@ -119,8 +119,8 @@ public class BloomFilterValidation {
             int falsePositive = 0;
 
             //merge false positive counter
-            for (IntWritable counter : values)
-                falsePositive += counter.get();
+            while (values.iterator().hasNext())
+                falsePositive += values.iterator().next().get();
 
             context.write(key, new IntWritable(falsePositive));
         }

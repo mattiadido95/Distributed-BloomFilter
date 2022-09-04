@@ -73,8 +73,8 @@ public class ParameterCalculation {
             double p = context.getConfiguration().getDouble("parameter.calculation.p",0.05);
 
             // merge mapper's counters for rating = key
-            for (IntWritable value : values)
-                n += value.get();
+            while (values.iterator().hasNext())
+                n += values.iterator().next().get();
 
             m = (int) (- ( n * Math.log(p) ) / (Math.pow(Math.log(2),2.0)));
             k = (int) ((m/n) * Math.log(2));
