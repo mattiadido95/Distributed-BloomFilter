@@ -27,22 +27,19 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
     public BloomFilter(int m, int k) {
         this.m = m;
         this.k = k;
-        this.arrayBF = new BitSet((int) m);
+        this.arrayBF = new BitSet(m);
     }
 
-    public BloomFilter(BloomFilter bf){
-        this.arrayBF = (BitSet) bf.arrayBF.clone();
-        this.m = bf.m;
-        this.k = bf.k;
-    }
+    // used to create a bloom filter from an iterator of bloom filters
+    public BloomFilter(Iterable<BloomFilter> arrayBFs){
+        BloomFilter first = arrayBFs.iterator().next();
+        this.m = first.m;
+        this.k = first.k;
+        this.arrayBF = (BitSet) first.arrayBF.clone();
 
-    // used to create a bloom filter from a list of bloom filters
-    public BloomFilter(int m, int k, List<BloomFilter> arrayBFs) {
-        this.m = m;
-        this.k = k;
-        this.arrayBF = new BitSet((int) m);
-        for (BloomFilter bf : arrayBFs)
-            this.arrayBF.or(bf.getArrayBF());
+        while(arrayBFs.iterator().hasNext()) {
+            or(arrayBFs.iterator().next().getArrayBF());
+        }
     }
 
     // compute k MURMUR_HASH for a given title and set relative bits in bloom filter
@@ -53,6 +50,7 @@ public class BloomFilter implements Writable, Comparable<BloomFilter>{
             arrayBF.set(index,true);
         }
     }
+
     // return true only if it finds all the k bits, associated to the title, set
     public boolean find(String title){
         int index;
