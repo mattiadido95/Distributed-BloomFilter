@@ -30,6 +30,7 @@ public class BloomFilterDriver {
         FileStatus[] status = fs.listStatus(ptStage1);
         // Extraction of the "n" for each rating (output stage1)
         for (FileStatus fileStatus : status) {
+            // Read all parts of the result
             if (!fileStatus.getPath().toString().endsWith("_SUCCESS")) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
 
@@ -76,6 +77,8 @@ public class BloomFilterDriver {
         double[] percentage = new double[totalRating];
         for (int i = 0; i < totalRating; i++) {
             // System.out.println(i + " | n = " + result[i] + " | fp = " + result2[i]);
+            // for every rating (i) the percentage is the false positive counter for that rating (result2[i])
+            // divided by the number of movies with different rating (total_n - result[i])
             percentage[i] = (double) result2[i] / (double) (total_n - result[i]);
         }
 

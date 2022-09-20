@@ -85,7 +85,7 @@ public class BloomFilterGeneration {
                     bf[i] = null;
                 else
                     bf[i] = new BloomFilter(m,k);
-                Log.writeLog("Stage2_" + context.getTaskAttemptID().getTaskID() + ".txt","Map_setup : " + context.getTaskAttemptID().getTaskID() + "\t" + i + "\t" +  m + "\n");
+                //Log.writeLog("Stage2_" + context.getTaskAttemptID().getTaskID() + ".txt","Map_setup : " + context.getTaskAttemptID().getTaskID() + "\t" + i + "\t" +  m + "\n");
             }
         }
 
@@ -117,7 +117,7 @@ public class BloomFilterGeneration {
             for (int i = 0; i < maxRating; i++)
                 // emit only if bloom filter exists
                 if (bf[i] != null) {
-                    Log.writeLog("Stage2_" + context.getTaskAttemptID().getTaskID() + ".txt","Map_cleanup : " + context.getTaskAttemptID().getTaskID() + "\t" + i + "\t" + bf[i].getArrayBF().length()+ "\n");
+                    //Log.writeLog("Stage2_" + context.getTaskAttemptID().getTaskID() + ".txt","Map_cleanup : " + context.getTaskAttemptID().getTaskID() + "\t" + i + "\t" + bf[i].getArrayBF().length()+ "\n");
                     context.write(new IntWritable(i + 1), bf[i]);
             }
         }
