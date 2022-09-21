@@ -51,7 +51,45 @@ public class ConfigManager {
         return (String) output.get("stage3");
     }
 
+    public static int getLinesPerMapStage1() {
+        JSONObject output = (JSONObject) config.get("linesPerMap");
+        return ((Long) output.get("stage1")).intValue();
+    }
+
+    public static int getLinesPerMapStage2() {
+        JSONObject output = (JSONObject) config.get("linesPerMap");
+        return ((Long) output.get("stage2")).intValue();
+    }
+
+    public static int getLinesPerMapStage3() {
+        JSONObject output = (JSONObject) config.get("linesPerMap");
+        return ((Long) output.get("stage3")).intValue();
+    }
+
+    public static int getNReducerStage1() {
+        JSONObject output = (JSONObject) config.get("nReducer");
+        return ((Long) output.get("stage1")).intValue();
+    }
+
+    public static int getNReducerStage2() {
+        JSONObject output = (JSONObject) config.get("nReducer");
+        return ((Long) output.get("stage2")).intValue();
+    }
+
+    public static int getNReducerStage3() {
+        JSONObject output = (JSONObject) config.get("nReducer");
+        return ((Long) output.get("stage3")).intValue();
+    }
+
     public static String getRoot() {
         return (String) config.get("root");
+    }
+
+    public static String getStatsFile() {
+        return (String) config.get("statsFile");
+    }
+
+    public static String getOutputFile() {
+        return (String) config.get("outputFile");
     }
 }
