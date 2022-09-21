@@ -37,7 +37,7 @@ public class Log {
         try {
             FileWriter fstream = new FileWriter(file, true); //true tells to append data.
             out = new BufferedWriter(fstream);
-            out.write(msg+"\n");
+            out.write(msg + "\n");
         } catch (IOException e) {
             System.err.println("Error: " + e.getMessage());
         } finally {

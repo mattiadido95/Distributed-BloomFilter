@@ -41,7 +41,7 @@ public class BloomFilterValidation {
 
                     IntWritable key = new IntWritable();
                     BloomFilter value = new BloomFilter();
-                    while (reader.next(key, value)) {
+                    while (reader.next(key, value)) { // read.next because this is a sequence file
                         int index = key.get() - 1;
                         result[index] = value;
                         key = new IntWritable();
@@ -52,7 +52,7 @@ public class BloomFilterValidation {
                 }
             }
         }
-        return result;
+        return result; // contain all bloom filter
     }
 
     /*
@@ -67,7 +67,7 @@ public class BloomFilterValidation {
         // load all the bloom filter and create counters for false positive rate
         @Override
         protected void setup(Context context) throws IOException {
-            this.bf = readFilter(context.getConfiguration());
+            this.bf = readFilter(context.getConfiguration()); // read all bloom filters
             counter = new int[maxRating];
         }
 
@@ -87,11 +87,11 @@ public class BloomFilterValidation {
             if (tokens.length == 3) {
                 int roundedRating = (int) Math.round(Double.parseDouble(tokens[1]));
 
-                for (int i = 0; i < maxRating; i++) {
-                    if (roundedRating == i+1)
+                for (int i = 0; i < maxRating; i++) { // check false positive
+                    if (roundedRating == i + 1) // skip bf of equal rating
                         continue;
 
-                    // increment counter if title is found in bloom filter
+                    // increment counter if title is found in uncorrect bloom filter
                     if (bf[i].find(tokens[0]))
                         counter[i]++;
                 }
@@ -103,7 +103,7 @@ public class BloomFilterValidation {
             for (int i = 0; i < maxRating; i++) {
                 // emit only if we found false positive counter for rating i
                 if (counter[i] > 0) {
-                    context.write(new IntWritable(i + 1), new IntWritable(counter[i]));
+                    context.write(new IntWritable(i + 1), new IntWritable(counter[i])); //emit
                 }
             }
         }
@@ -122,7 +122,7 @@ public class BloomFilterValidation {
             while (values.iterator().hasNext())
                 falsePositive += values.iterator().next().get();
 
-            context.write(key, new IntWritable(falsePositive));
+            context.write(key, new IntWritable(falsePositive)); // emit <rating, fp sum>
         }
     }
 

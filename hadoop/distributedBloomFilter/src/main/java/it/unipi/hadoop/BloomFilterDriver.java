@@ -25,15 +25,14 @@ public class BloomFilterDriver {
         int total_n = 0;
         int totalRating = 10;
         int[] result = new int[totalRating];
-        Path ptStage1 = new Path(pathString + ConfigManager.getOutputStage1() + "/");
+        Path ptStage1 = new Path(pathString + ConfigManager.getOutputStage1() + "/"); // to select specific directory
         FileSystem fs = FileSystem.get(conf);
         FileStatus[] status = fs.listStatus(ptStage1);
         // Extraction of the "n" for each rating (output stage1)
         for (FileStatus fileStatus : status) {
             // Read all parts of the result
-            if (!fileStatus.getPath().toString().endsWith("_SUCCESS")) {
+            if (!fileStatus.getPath().toString().endsWith("_SUCCESS")) { // read all files except _SUCCESS
                 BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
-
                 for (Iterator<String> it = br.lines().iterator(); it.hasNext(); ) {
                     String line = it.next();
                     String[] tokens = line.split("\t");
@@ -55,10 +54,8 @@ public class BloomFilterDriver {
         FileStatus[] status1 = fs1.listStatus(pt);
         for (FileStatus fileStatus : status1) {
             if (!fileStatus.getPath().toString().endsWith("_SUCCESS")) {
-
                 try {
                     Reader reader = new Reader(conf, Reader.file(new Path(fileStatus.getPath().toString())));
-
                     IntWritable key = new IntWritable();
                     IntWritable value = new IntWritable();
                     while (reader.next(key, value)) {
@@ -73,7 +70,8 @@ public class BloomFilterDriver {
             }
         }
 
-        //Percentage calculation of false positives with respect to the total of n
+        // now we have fpr and n for each ratings
+        // Percentage calculation of false positives with respect to the total of n
         double[] percentage = new double[totalRating];
         for (int i = 0; i < totalRating; i++) {
             // System.out.println(i + " | n = " + result[i] + " | fp = " + result2[i]);
@@ -86,13 +84,15 @@ public class BloomFilterDriver {
     }
 
     public static void main(String[] args) throws Exception {
-        // load config file
-        ConfigManager.importConfig("config.json");
 
-        String[] param1 = {ConfigManager.getFalsePositiveRate() + "", ConfigManager.getInput(), ConfigManager.getOutputStage1()};
+        ConfigManager.importConfig("config.json"); // load config file
+
+        // STAGE 1
+
+        String[] param1 = {ConfigManager.getFalsePositiveRate() + "", ConfigManager.getInput(), ConfigManager.getOutputStage1()}; // array with input params for Stage 1
         long start = System.currentTimeMillis(); // start first timer for Stage 1
-        if (!ParameterCalculation.main(param1)) {
-            System.err.println("Stage 1 failed");
+        if (!ParameterCalculation.main(param1)) { // call to Stage 1 with param1[], main method return boolean value
+            System.err.println("Stage 1 failed"); // if main return false
             return;
         }
         long end = System.currentTimeMillis(); // end first timer for Stage 1
@@ -100,10 +100,12 @@ public class BloomFilterDriver {
         Log.writeLocal(ConfigManager.getStatsFile(), Float.toString(sec));
         System.out.println("- Stage 1 duration -> " + sec + " seconds"); // print Stage 1 duration
 
-        String[] param2 = {ConfigManager.getInput(), ConfigManager.getOutputStage2()};
+        // STAGE 2
+
+        String[] param2 = {ConfigManager.getInput(), ConfigManager.getOutputStage2()}; // array with input params for Stage 2
         start = System.currentTimeMillis(); // start second timer for Stage 2
-        if (!BloomFilterGeneration.main(param2)) {
-            System.err.println("Stage 2 failed");
+        if (!BloomFilterGeneration.main(param2)) { // call to Stage 2 with param2[], main method return boolean value
+            System.err.println("Stage 2 failed"); // if main return false
             return;
         }
         end = System.currentTimeMillis(); // stop second timer for Stage 2
@@ -111,10 +113,12 @@ public class BloomFilterDriver {
         Log.writeLocal(ConfigManager.getStatsFile(), Float.toString(sec));
         System.out.println("- Stage 2 duration -> " + sec + " seconds"); // print Stage 2 duration
 
-        String[] param3 = {ConfigManager.getInput(), ConfigManager.getOutputStage3()};
+        // STAGE 3
+
+        String[] param3 = {ConfigManager.getInput(), ConfigManager.getOutputStage3()}; // array with input params for Stage 3
         start = System.currentTimeMillis(); // start third timer for Stage 3
-        if (!BloomFilterValidation.main(param3)) {
-            System.err.println("Stage 3 failed");
+        if (!BloomFilterValidation.main(param3)) { // call Stage 3 with param3[], main method return boolean value
+            System.err.println("Stage 3 failed"); // if main return false
             return;
         }
         end = System.currentTimeMillis(); // stop third timer for Stage 3
@@ -122,17 +126,17 @@ public class BloomFilterDriver {
         Log.writeLocal(ConfigManager.getStatsFile(), Float.toString(sec));
         System.out.println("- Stage 3 duration -> " + sec + " seconds"); // print Stage 3 duration
 
-        Log.writeLocal(ConfigManager.getStatsFile(), "------ end execution ------");
+        Log.writeLocal(ConfigManager.getStatsFile(), "------ end execution ------"); // write end log message
 
-        String path = ConfigManager.getRoot();
-        double[] falsePositive = percentageFalsePositive(new Configuration(), path);
+        String path = ConfigManager.getRoot(); // load root path
+        double[] falsePositive = percentageFalsePositive(new Configuration(), path); // run the counting of FPR for each rating
         for (int i = 0; i < falsePositive.length; i++)
-            System.out.println("Rating: " + (i + 1) + " False Positive Count : " + falsePositive[i]);
+            System.out.println("Rating: " + (i + 1) + " False Positive Count : " + falsePositive[i]); // log results on terminal
 
-        // write results on output file
+
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(ConfigManager.getOutputFile()), "utf-8"))) {
             for (int i = 0; i < falsePositive.length; i++)
-                writer.write((i + 1) + "," + falsePositive[i] + "\n");
+                writer.write((i + 1) + "," + falsePositive[i] + "\n"); // write results (false postive rate) on output file
         }
     }
 }

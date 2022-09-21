@@ -40,19 +40,20 @@ public class BloomFilterGeneration {
         FileStatus[] status = fs.listStatus(pt);
         int[] result = new int[30];
         for (FileStatus fileStatus : status) {
+            // read from file system
             if (!fileStatus.getPath().toString().endsWith("_SUCCESS")) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
 
-                for(Iterator<String> it = br.lines().iterator(); it.hasNext(); ) {
+                for (Iterator<String> it = br.lines().iterator(); it.hasNext(); ) {
                     String line = it.next();
                     String[] tokens = line.split("\t");
                     int rating = Integer.parseInt(tokens[0]);
                     int n = Integer.parseInt(tokens[1]);
                     int m = Integer.parseInt(tokens[2]);
                     int k = Integer.parseInt(tokens[3]);
-                    result[(rating-1)*3] = n;
-                    result[(rating-1)*3+1] = m;
-                    result[(rating-1)*3+2] = k;
+                    result[(rating - 1) * 3] = n;
+                    result[(rating - 1) * 3 + 1] = m;
+                    result[(rating - 1) * 3 + 2] = k;
                 }
                 br.close();
                 // fs.close();
@@ -74,17 +75,18 @@ public class BloomFilterGeneration {
         protected void setup(Context context) {
             this.bf = new BloomFilter[maxRating];
 
-            for(int i=0; i<maxRating; i++){
-                int index = i+1;
-                int m = context.getConfiguration().getInt("filter." + index + ".parameter.m",0);
-                int k = context.getConfiguration().getInt("filter." + index + ".parameter.k",0);
+            for (int i = 0; i < maxRating; i++) {
+                int index = i + 1;
+                // read params from context
+                int m = context.getConfiguration().getInt("filter." + index + ".parameter.m", 0);
+                int k = context.getConfiguration().getInt("filter." + index + ".parameter.k", 0);
                 //Log.writeLog("Setup : " + m + "\t" + k);
 
                 //no film for rating i
-                if(m == 0 || k == 0)
+                if (m == 0 || k == 0)
                     bf[i] = null;
                 else
-                    bf[i] = new BloomFilter(m,k);
+                    bf[i] = new BloomFilter(m, k);
                 //Log.writeLog("Stage2_" + context.getTaskAttemptID().getTaskID() + ".txt","Map_setup : " + context.getTaskAttemptID().getTaskID() + "\t" + i + "\t" +  m + "\n");
             }
         }
@@ -104,7 +106,7 @@ public class BloomFilterGeneration {
             // <title, rating, numVotes>
             if (tokens.length == 3) {
                 int roundedRating = (int) Math.round(Double.parseDouble(tokens[1]));
-                if(bf[roundedRating-1] != null) {
+                if (bf[roundedRating - 1] != null) {
                     // set bits in the bloom filter for that title
                     bf[roundedRating - 1].add(tokens[0]);
                     //Log.writeLog(context.getConfiguration(), "Map : " + tokens + "\t" + bf[roundedRating - 1]);
@@ -118,8 +120,8 @@ public class BloomFilterGeneration {
                 // emit only if bloom filter exists
                 if (bf[i] != null) {
                     //Log.writeLog("Stage2_" + context.getTaskAttemptID().getTaskID() + ".txt","Map_cleanup : " + context.getTaskAttemptID().getTaskID() + "\t" + i + "\t" + bf[i].getArrayBF().length()+ "\n");
-                    context.write(new IntWritable(i + 1), bf[i]);
-            }
+                    context.write(new IntWritable(i + 1), bf[i]); // emit <rating, bloom filter>
+                }
         }
     }
 
@@ -133,9 +135,8 @@ public class BloomFilterGeneration {
         @Override
         public void reduce(IntWritable key, Iterable<BloomFilter> values, Context context) throws IOException, InterruptedException {
             BloomFilter bfTot = new BloomFilter(values);
-
             //Log.writeLog("Stage2.txt","Reducer : " + context.getTaskAttemptID().getTaskID() + "\n" + bfTot);
-            context.write(key, bfTot);
+            context.write(key, bfTot); // emit <rating, bloom final bloom filter>
         }
 
     }
@@ -167,13 +168,13 @@ public class BloomFilterGeneration {
         // load parameter from hdfs to config
         try {
             int[] result = readFilterParameter(conf, ConfigManager.getRoot() + ConfigManager.getOutputStage1() + "/");
-            for(int i = 0; i < 10; i++) {
-                int index = ((i)*3);
-                job.getConfiguration().setInt("filter." + (i+1) + ".parameter.n", result[index]);
-                job.getConfiguration().setInt("filter." + (i+1) + ".parameter.m", result[index+1]);
-                job.getConfiguration().setInt("filter." + (i+1) + ".parameter.k", result[index+2]);
+            for (int i = 0; i < 10; i++) { // set for each bloom filter the params in the configuration
+                int index = ((i) * 3);
+                job.getConfiguration().setInt("filter." + (i + 1) + ".parameter.n", result[index]);
+                job.getConfiguration().setInt("filter." + (i + 1) + ".parameter.m", result[index + 1]);
+                job.getConfiguration().setInt("filter." + (i + 1) + ".parameter.k", result[index + 2]);
             }
-        }catch(IOException ioe){
+        } catch (IOException ioe) {
             ioe.printStackTrace();
         }
 
@@ -181,9 +182,8 @@ public class BloomFilterGeneration {
         FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
         FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
 
-        job.setInputFormatClass(NLineInputFormat.class);
-        //output in sequence file in order to read it with key-value
-        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+        job.setInputFormatClass(NLineInputFormat.class); // nline instad of text to set number of lines of each machine for the split phase
+        job.setOutputFormatClass(SequenceFileOutputFormat.class); //output in sequence file in order to read it with key-value ( more simple to use instead of text file )
 
         // setup number of map and reduce
         NLineInputFormat.setNumLinesPerSplit(job, ConfigManager.getLinesPerMapStage2());

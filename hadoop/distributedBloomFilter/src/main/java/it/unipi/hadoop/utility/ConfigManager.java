@@ -30,7 +30,9 @@ public class ConfigManager {
         System.out.println(config.toString());
     }
 
-    public static double getFalsePositiveRate() { return (double) config.get("falsePositiveRate"); }
+    public static double getFalsePositiveRate() {
+        return (double) config.get("falsePositiveRate");
+    }
 
     public static String getInput() {
         return (String) config.get("input");

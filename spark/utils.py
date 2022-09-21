@@ -1,7 +1,8 @@
-def write_output(percentage,output_file_name):
+def write_output(percentage, output_file_name):
     with open(output_file_name, "a") as f:
         for x, y in percentage:
             f.write(str(x) + "," + str(y) + "\n")
+
 
 def write_duration(p, times, duration_file_name):
     with open(duration_file_name, "a") as f:

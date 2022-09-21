@@ -18,7 +18,7 @@ class BloomFilter:
         return True
 
     def merge(self, bf):
-        self.array_bf = [x|y for x,y in zip(self.array_bf, bf.get())]
+        self.array_bf = [x | y for x, y in zip(self.array_bf, bf.get())]
         return self
 
     def get(self):

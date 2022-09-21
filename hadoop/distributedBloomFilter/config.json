@@ -1,22 +1,22 @@
 {
-  "falsePositiveRate" : 0.01,
-  "input" : "data.tsv",
-  "output" : {
-    "stage1" : "parameter",
-    "stage2" : "filter",
-    "stage3" : "falsePositive"
+  "falsePositiveRate": 0.01,
+  "input": "data.tsv",
+  "output": {
+    "stage1": "parameter",
+    "stage2": "filter",
+    "stage3": "falsePositive"
   },
-  "linesPerMap" : {
-    "stage1" : 1256196,
-    "stage2" : 1256196,
-    "stage3" : 1256196
+  "linesPerMap": {
+    "stage1": 1256196,
+    "stage2": 1256196,
+    "stage3": 1256196
   },
-  "nReducer" : {
-    "stage1" : 1,
-    "stage2" : 1,
-    "stage3" : 1
+  "nReducer": {
+    "stage1": 1,
+    "stage2": 1,
+    "stage3": 1
   },
-  "root" : "hdfs://hadoop-namenode:9820/user/hadoop/",
+  "root": "hdfs://hadoop-namenode:9820/user/hadoop/",
   "statsFile": "stage-duration-hadoop.txt",
   "outputFile": "output-hadoop.csv"
 }
