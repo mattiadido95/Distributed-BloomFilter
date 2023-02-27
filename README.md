@@ -13,7 +13,7 @@ The project consists of three main stages for the implementation of the Bloom Fi
 - Bloom Filter Creation: In this stage, the Bloom Filters are created and populated using the dataset.
 - Bloom Filter Validation: In this stage, the performance of the data structures, in terms of false positive rate, are evaluated.
 
-##Benefits
+## Benefits
 The use of a distributed Bloom Filter in this project can bring several benefits, such as:
 
 - Improved response time for search queries related to movies.
